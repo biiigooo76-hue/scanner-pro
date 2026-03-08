@@ -885,18 +885,16 @@
       </div>
       
       <div class="parcel-box mt-3" id="parcelBox">
-        <div class="row align-items-center">
-          <div class="col-7 text-start" style="border-right: 1.5px solid var(--pink-light);">
-            <div class="section-title" style="margin-top:0; margin-bottom:4px;">📦 พัสดุปัจจุบัน</div>
-            <div class="d-flex align-items-center gap-2">
-              <span id="parcelId" style="font-weight:700; color:var(--pink); font-size:1.25rem; letter-spacing:0.5px; word-break:break-all;">-</span>
-              <button id="editParcelBtn" onclick="editParcelId()" class="btn btn-edit-inline" style="display:none">✏️ แก้รหัส</button>
-            </div>
+        <div class="row align-items-center g-0">
+          <div class="col-8 text-start pe-2" style="border-right: 1.5px solid var(--pink-light);">
+            <div class="section-title" style="margin-top:0; margin-bottom:2px; font-size:0.68rem;">📦 พัสดุปัจจุบัน</div>
+            <div style="font-weight:700; color:var(--pink); font-size:0.85rem; letter-spacing:0.3px; word-break:break-all; line-height:1.3;" id="parcelId">-</div>
+            <button id="editParcelBtn" onclick="editParcelId()" class="btn btn-edit-inline mt-1" style="display:none; font-size:0.68rem; padding:2px 10px;">✏️ แก้รหัส</button>
           </div>
-          <div class="col-5 text-center">
-            <div class="section-title" style="margin-top:0; margin-bottom:2px;">🛍 สินค้า</div>
-            <div id="count" style="font-size:2.6rem; font-weight:700; color:var(--pink); line-height:1;">0</div>
-            <div style="font-size:0.72rem; color:var(--text3); margin-top:1px;">ชิ้น</div>
+          <div class="col-4 text-center ps-2">
+            <div class="section-title" style="margin-top:0; margin-bottom:1px; font-size:0.68rem;">🛍 สินค้า</div>
+            <div id="count" style="font-size:1.8rem; font-weight:700; color:var(--pink); line-height:1;">0</div>
+            <div style="font-size:0.68rem; color:var(--text3);">ชิ้น</div>
           </div>
         </div>
       </div>
@@ -904,12 +902,8 @@
       <!-- Status bar — full width ใต้ parcel box -->
       <div id="statusLabel" class="status-bar-full">รอเริ่มระบบ...</div>
       
-      <div class="mt-3 text-start">
-        <div class="section-title">รายการสินค้าในกล่อง</div>
-        <!-- Fix 7: จำกัดความสูง scroll เมื่อรายการเยอะ -->
-        <ul id="itemList" class="list-group item-list-scroll"></ul>
-      </div>
-      
+      <ul id="itemList" style="display:none;"></ul>
+
       <button id="refreshCacheBtn" onclick="refreshAllCache()" class="btn btn-sm mb-2 w-100 mt-3" style="display:none; border-radius:18px; border:1.5px solid var(--pink-light); color:var(--pink); background:white; font-family:'Mitr',sans-serif; font-size:0.88rem; padding:8px;">🔄 ดึงข้อมูลล่าสุด (สินค้า & ออเดอร์)</button>
       
       <!-- Fix 6: sticky action bar ไม่ถูก nav บัง + Fix 1: col-7/col-5 -->
@@ -2083,28 +2077,70 @@ async function closeAppCompletely() {
 }
 
 function renderList() {
-  let ul = document.getElementById("itemList");
-  ul.innerHTML = "";
+  // strict mode: checklist จัดการแสดงผลแทน itemList แล้ว
+  if (isStrictValidationMode) return;
+
+  // non-strict mode: แสดงใน checklistContent แทน itemList
+  const panel = document.getElementById('orderChecklistPanel');
+  const content = document.getElementById('checklistContent');
+  if (!panel || !content) return;
+
+  if (items.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+
+  // ซ่อน progress bar (ใช้เฉพาะ strict mode)
+  const pw = document.getElementById('checklistProgressWrap');
+  if (pw) pw.style.display = 'none';
+
+  // แสดงชื่อ section
+  const h6 = panel.querySelector('h6');
+  if (h6) h6.textContent = 'รายการสินค้าในกล่อง';
+
+  let html = '';
   [...items].reverse().forEach((c, i) => {
     const known = productMap[c];
-    let li = document.createElement("li");
-    li.className = "list-group-item d-flex justify-content-between align-items-center animate__animated animate__slideInLeft";
-    if (!known) {
-      li.style.cssText += "; border-left-color: #e17055 !important; background: linear-gradient(135deg,#fff4f0,#fff8f0) !important;";
-    }
     const label = known
       ? escHtml(known)
-      : `<span style="color:#e17055; font-weight:600;">⚠️ ไม่รู้จัก</span> <span style="font-size:0.8em; color:#888;">${escHtml(c)}</span>`;
-    li.innerHTML = `<span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${label}</span><button class="btn-delete-item" onclick="removeItem(${items.length - 1 - i})" title="ลบ">✕</button>`;
-    ul.appendChild(li);
+      : `<span style="color:#e17055;font-weight:600;">⚠️ ไม่รู้จัก</span> <span style="font-size:0.8em;color:#888;">${escHtml(c)}</span>`;
+    const realIdx = items.length - 1 - i;
+    const borderColor = known ? 'var(--pink-light)' : '#e17055';
+    html += `<div class="checklist-item" style="display:flex;align-items:center;justify-content:space-between;gap:6px;border-left-color:${borderColor};">
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🛍 ${label}</span>
+      <button class="btn-delete-item" onclick="removeItem(${realIdx})" title="ลบ" style="flex-shrink:0;">✕</button>
+    </div>`;
   });
+  content.innerHTML = html;
+
+  // ซ่อน alert และ remark ใน non-strict
+  const alertBox = document.getElementById('orderStatusAlert');
+  if (alertBox) alertBox.style.display = 'none';
+}
+
+// ลบ 1 ชิ้นล่าสุดของ SKU นั้น (ใช้ใน checklist mode)
+function removeLastScanned(sku) {
+  const idx = items.lastIndexOf(sku);
+  if (idx === -1) return;
+  undoStack = { idx, sku };
+  items.splice(idx, 1);
+  if (isStrictValidationMode) {
+    if (scannedItemsMap[sku] > 0) {
+      scannedItemsMap[sku]--;
+      if (scannedItemsMap[sku] === 0) delete scannedItemsMap[sku];
+    }
+    updateChecklistUI();
+  }
+  document.getElementById("count").innerText = items.length;
+  renderList();
+  const name = productMap[sku] || sku;
+  showUndoToast(`ลบ "${name.length > 18 ? name.slice(0,18)+'…' : name}" แล้ว`);
 }
 
 function removeItem(idx) {
   const sku = items[idx];
-  // เก็บ undo stack
   undoStack = { idx, sku };
-  // ลบออกจาก array
   if (isStrictValidationMode) {
     if (scannedItemsMap[sku] > 0) {
       scannedItemsMap[sku]--;
@@ -2211,20 +2247,40 @@ function updateChecklistUI() {
       : 'linear-gradient(90deg,var(--pink),#b57bee)';
   }
 
+  // แสดงแต่ละรายการ expected พร้อมปุ่มลบชิ้นล่าสุด
   expectedItemsArray.forEach(item => {
     let scanQty = scannedItemsMap[item.sku] || 0;
     let statusClass = "", icon = "⏳";
     if (scanQty === item.qty) { statusClass = "matched"; icon = "✅"; }
     else if (scanQty > item.qty) { statusClass = "over"; icon = "❌"; isAllMatched = false; hasOverScan = true; }
     else { isAllMatched = false; }
-    html += `<div class="checklist-item ${statusClass}"><span>${icon} ${escHtml(productMap[item.sku] || item.sku)}</span><span class="badge bg-${scanQty === item.qty ? 'success' : (scanQty > item.qty ? 'danger' : 'secondary')} rounded-pill">${scanQty} / ${item.qty}</span></div>`;
+    const canDelete = scanQty > 0;
+    const delBtn = canDelete
+      ? `<button onclick="removeLastScanned('${escHtml(item.sku)}')" class="btn-delete-item ms-1" title="ลบ 1 ชิ้น" style="flex-shrink:0;">✕</button>`
+      : `<span style="width:28px; flex-shrink:0; display:inline-block;"></span>`;
+    html += `<div class="checklist-item ${statusClass}" style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+      <span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${icon} ${escHtml(productMap[item.sku] || item.sku)}</span>
+      <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+        <span class="badge bg-${scanQty === item.qty ? 'success' : (scanQty > item.qty ? 'danger' : 'secondary')} rounded-pill">${scanQty} / ${item.qty}</span>
+        ${delBtn}
+      </div>
+    </div>`;
   });
+
+  // สินค้าที่สแกนมาแต่ไม่อยู่ใน expected (ส่วนเกิน)
   for (let sSku in scannedItemsMap) {
     if (!expectedItemsArray.find(ex => ex.sku === sSku) && scannedItemsMap[sSku] > 0) {
-      html += `<div class="checklist-item over"><span>❌ ${escHtml(productMap[sSku] || sSku)} (ส่วนเกิน!)</span><span class="badge bg-danger rounded-pill">${scannedItemsMap[sSku]}</span></div>`;
+      html += `<div class="checklist-item over" style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+        <span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">❌ ${escHtml(productMap[sSku] || sSku)} <small>(ส่วนเกิน!)</small></span>
+        <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+          <span class="badge bg-danger rounded-pill">${scannedItemsMap[sSku]}</span>
+          <button onclick="removeLastScanned('${escHtml(sSku)}')" class="btn-delete-item" title="ลบ 1 ชิ้น" style="flex-shrink:0;">✕</button>
+        </div>
+      </div>`;
       isAllMatched = false; hasOverScan = true;
     }
   }
+
   document.getElementById('checklistContent').innerHTML = html;
   const alertBox = document.getElementById('orderStatusAlert');
   const saveBtn = document.getElementById('saveBtn');
