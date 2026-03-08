@@ -263,18 +263,20 @@
     /* ===== CHECKLIST ===== */
     .order-checklist {
       background: linear-gradient(135deg, #fff8ff, #fff0f3);
-      border-radius: var(--radius); padding: 14px;
+      border-radius: var(--radius-sm); padding: 10px;
       border: 2px dashed var(--pink-light) !important;
-      margin-top: 14px; display: none;
+      margin-top: 10px; display: none;
     }
+    .order-checklist h6 { font-size: 0.78rem !important; margin-bottom: 6px !important; }
     .checklist-item {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 9px 10px; border-bottom: 1px solid #ffe4ec;
-      font-size: 1rem; border-radius: 8px; margin-bottom: 2px;
+      padding: 5px 8px; border-bottom: 1px solid #ffe4ec;
+      font-size: 0.78rem; border-radius: 6px; margin-bottom: 1px;
     }
     .checklist-item:last-child { border-bottom: none; }
     .checklist-item.matched { background: #e8fff0; color: var(--success); font-weight: 600; }
     .checklist-item.over    { background: #fff0f0; color: var(--danger); font-weight: 600; }
+    .checklist-item .badge  { font-size: 0.65rem !important; padding: 2px 7px !important; }
 
     /* ===== REMARK PANEL ===== */
     .remark-panel {
@@ -529,17 +531,17 @@
       <div id="orderChecklistPanel" class="order-checklist text-start shadow-sm mb-3">
         <h6 class="fw-bold mb-2" style="color:var(--text)">รายการที่ต้องแพ็ก</h6>
         <!-- Progress Bar -->
-        <div id="checklistProgressWrap" style="margin-bottom:10px; display:none;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-            <span style="font-size:0.78rem; color:var(--text2); font-weight:500;">ความคืบหน้า</span>
-            <span id="checklistProgressLabel" style="font-size:0.78rem; font-weight:600; color:var(--pink);">0 / 0 ชิ้น</span>
+        <div id="checklistProgressWrap" style="margin-bottom:8px; display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+            <span style="font-size:0.7rem; color:var(--text3); font-weight:500;">ความคืบหน้า</span>
+            <span id="checklistProgressLabel" style="font-size:0.7rem; font-weight:600; color:var(--pink);">0 / 0 ชิ้น</span>
           </div>
-          <div style="background:var(--pink-light); border-radius:20px; height:10px; overflow:hidden;">
+          <div style="background:var(--pink-light); border-radius:20px; height:7px; overflow:hidden;">
             <div id="checklistProgressBar" style="height:100%; border-radius:20px; background:linear-gradient(90deg,var(--pink),#b57bee); width:0%; transition:width 0.4s cubic-bezier(0.34,1.56,0.64,1);"></div>
           </div>
         </div>
         <div id="checklistContent"></div>
-        <div id="orderStatusAlert" class="alert mt-2 mb-0 py-2" style="display:none; font-size: 0.85rem;"></div>
+        <div id="orderStatusAlert" class="alert mt-2 mb-0 py-1" style="display:none; font-size:0.75rem;"></div>
         
         <!-- Remark Panel: แสดงเมื่อสินค้าไม่ครบ -->
         <div id="remarkPanel" class="remark-panel">
