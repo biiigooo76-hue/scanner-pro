@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Permissions-Policy" content="camera=*">
   <title>Lamsangstore — Scanner</title>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff8fab">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LS Scanner">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2ZmOGZhYiIvPjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1zaXplPSI1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiPkw8L3RleHQ+PC9zdmc+">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZjY5YjQ7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2ZmODVjMjtzdG9wLW9wYWNpdHk6MSIgLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InNoaW5lR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZmZmZmZmO3N0b3Atb3BhY2l0eTowLjM1IiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZmZmZmY7c3RvcC1vcGFjaXR5OjAiIC8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KCiAgPCEtLSDguJ7guLfguYnguJnguKvguKXguLHguIfguIHguKXguKEgLS0+CiAgPGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDgiIGZpbGw9InVybCgjYmdHcmFkKSIgLz4KICA8IS0tIHNoaW5lIG92ZXJsYXkgLS0+CiAgPGVsbGlwc2UgY3g9IjUwIiBjeT0iMzAiIHJ4PSIzMCIgcnk9IjIwIiBmaWxsPSJ1cmwoI3NoaW5lR3JhZCkiIC8+CgogIDwhLS0g4LiB4Lil4LmI4Lit4LiH4Lie4Lix4Liq4LiU4Li4IC0tPgogIDxyZWN0IHg9IjIyIiB5PSI0MiIgd2lkdGg9IjU2IiBoZWlnaHQ9IjM4IiByeD0iNSIgcnk9IjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuOTUiLz4KICA8IS0tIOC4neC4suC4geC4peC5iOC4reC4hyAtLT4KICA8cGF0aCBkPSJNMjAgNDQgUTUwIDM2IDgwIDQ0IEw4MCA0MiBRNTAgMzIgMjAgNDIgWiIgZmlsbD0iI2ZmZTBmMCIgb3BhY2l0eT0iMC45Ii8+CiAgPHBhdGggZD0iTTIwIDQyIEw1MCAzNCBMODAgNDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmNjliNCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPCEtLSDguYDguKrguYnguJnguIHguKXguLLguIfguJ3guLIgLS0+CiAgPGxpbmUgeDE9IjUwIiB5MT0iMzQiIHgyPSI1MCIgeTI9IjQ0IiBzdHJva2U9IiNmZjY5YjQiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtZGFzaGFycmF5PSIyLDIiLz4KICA8IS0tIHJpYmJvbiDguJrguJnguIHguKXguYjguK3guIcgLS0+CiAgPHJlY3QgeD0iNDQiIHk9IjQyIiB3aWR0aD0iMTIiIGhlaWdodD0iMzgiIHJ4PSIyIiBmaWxsPSIjZmZiNmQ5IiBvcGFjaXR5PSIwLjUiLz4KICA8IS0tIOC5guC4muC4p+C5jCAtLT4KICA8cGF0aCBkPSJNNTAgMzggUTQyIDMyIDM4IDM1IFE0MiAzOCA1MCAzOCIgZmlsbD0iI2ZmNjliNCIvPgogIDxwYXRoIGQ9Ik01MCAzOCBRNTggMzIgNjIgMzUgUTU4IDM4IDUwIDM4IiBmaWxsPSIjZmY2OWI0Ii8+CiAgPGNpcmNsZSBjeD0iNTAiIGN5PSIzOCIgcj0iMyIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjZmY2OWI0IiBzdHJva2Utd2lkdGg9IjEiLz4KCiAgPCEtLSDguJTguLLguKfguYDguKXguYfguIHguYYgLS0+CiAgPHRleHQgeD0iMTgiIHk9IjM4IiBmb250LXNpemU9IjkiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuOSI+4pymPC90ZXh0PgogIDx0ZXh0IHg9Ijc0IiB5PSIzNiIgZm9udC1zaXplPSI3IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjgiPuKcpjwvdGV4dD4KICA8dGV4dCB4PSIyNiIgeT0iODIiIGZvbnQtc2l6ZT0iNiIgZmlsbD0iI2ZmNjliNCIgb3BhY2l0eT0iMC42Ij7inKY8L3RleHQ+CgogIDwhLS0g4LiV4Lix4Lin4Lit4Lix4LiB4Lip4LijIEwgLS0+CiAgPHRleHQgeD0iNTAiIHk9IjcyIiAKICAgICAgICBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIAogICAgICAgIGZvbnQtc2l6ZT0iMjIiIAogICAgICAgIGZvbnQtd2VpZ2h0PSJib2xkIgogICAgICAgIGZpbGw9IiNmZjY5YjQiCiAgICAgICAgdGV4dC1hbmNob3I9Im1pZGRsZSIKICAgICAgICBsZXR0ZXItc3BhY2luZz0iMSI+TDwvdGV4dD4KPC9zdmc+Cg==">
   <script src="https://unpkg.com/html5-qrcode"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -517,6 +524,7 @@
     html.dark-mode .parcel-box  { background: linear-gradient(135deg,rgba(50,28,40,0.8),rgba(38,22,48,0.8)) !important; border-color: #5a2a40 !important; }
     html.dark-mode .order-checklist { background: linear-gradient(135deg,#241428,#1e1824) !important; border-color: #5a2a40 !important; }
     html.dark-mode .dash-table-card { background: rgba(38,26,34,0.9) !important; border-color: rgba(100,50,70,0.3) !important; }
+    html.dark-mode #dailyTargetInput { background: #2a1e26 !important; color: #f0d6e0 !important; border-color: #5a2a40 !important; }
     html.dark-mode .stat-card   { background: rgba(38,26,34,0.9) !important; border-color: rgba(100,50,70,0.3) !important; }
     html.dark-mode .onboarding-tip { background: linear-gradient(135deg,#241a08,#1e180a) !important; border-color: #6b4e10 !important; color: #e8d090 !important; }
 
@@ -1020,6 +1028,29 @@
             <div class="small mb-1" style="color:#c49aaa;">สินค้า (ชิ้น)</div>
             <div id="d-item" class="stat-num">0</div>
           </div>
+        </div>
+      </div>
+      <!-- Daily Target -->
+      <div id="dailyTargetWrap" class="dash-table-card mb-3">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <h6 class="fw-bold mb-0" style="color:var(--pink);">🎯 เป้าหมายวันนี้</h6>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input id="dailyTargetInput" type="number" min="0" max="999" placeholder="กล่อง/วัน"
+              oninput="saveDailyTarget(this.value)"
+              style="width:80px; padding:4px 8px; border-radius:10px; border:1.5px solid var(--pink-light);
+                     font-family:'Mitr',sans-serif; font-size:0.82rem; color:var(--text); text-align:center;
+                     background:var(--surface);">
+            <span style="font-size:0.72rem; color:var(--text3);">กล่อง</span>
+          </div>
+        </div>
+        <div id="dailyTargetProgress" style="display:none;">
+          <div style="background:var(--pink-light); border-radius:20px; height:10px; overflow:hidden; margin-bottom:6px;">
+            <div id="dailyTargetBar" style="height:100%; border-radius:20px; width:0%; transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1);"></div>
+          </div>
+          <div id="dailyTargetLabel" style="font-size:0.8rem; color:var(--text2); text-align:center; font-weight:500;"></div>
+        </div>
+        <div id="dailyTargetEmpty" style="font-size:0.78rem; color:var(--text3); text-align:center; padding:4px 0;">
+          ใส่ตัวเลขเป้าหมายเพื่อดู progress 👆
         </div>
       </div>
       <!-- Top Products Table -->
@@ -1751,19 +1782,23 @@ async function processFinalScan(text) {
       let currentScannedQty = scannedItemsMap[upperText] || 0;
       const productName = productMap[upperText] || upperText;
       if (!reqItem) {
-        vibrate([100, 50, 100, 50, 100]); // สินค้าไม่อยู่ในรายการ
+        beep('warn');
+        vibrate([100, 50, 100, 50, 100]);
         speak(productName, true);
         setTimeout(() => speak("ไม่มีสินค้านี้ในรายการนะคะ", false), 800);
       } else if (currentScannedQty >= reqItem.qty) {
-        vibrate([100, 50, 100, 50, 100]); // สินค้าเกิน
+        beep('warn');
+        vibrate([100, 50, 100, 50, 100]);
         speak(productName, true);
         setTimeout(() => speak("สินค้าเกินจำนวนค่ะ", false), 800);
       } else {
-        vibrate(30); // สแกนปกติ
+        beep('ok');
+        vibrate(30);
         speak(productName, true);
       }
       scannedItemsMap[upperText] = currentScannedQty + 1;
     } else {
+      beep('ok');
       vibrate(30);
       speak(productMap[upperText] || upperText, true);
     }
@@ -2220,6 +2255,7 @@ function updateChecklistUI() {
   if (isAllMatched && !hasOverScan) {
     alertBox.className = "alert alert-success mt-2 mb-0 py-2";
     alertBox.innerHTML = "<strong>สมบูรณ์!</strong> สินค้าครบถ้วน";
+    beep('done');
     vibrate([80, 60, 80]);
     speak("สินค้าครบถ้วนแล้วค่ะ", false);
     if (saveBtn) saveBtn.classList.add('ready');
@@ -2383,6 +2419,10 @@ function refreshDash() {
   const itemCount = entries.reduce((a, [, v]) => a + (typeof v === 'object' ? v.count : v), 0);
   document.getElementById("d-box").innerText  = orders;
   document.getElementById("d-item").innerText = itemCount;
+  updateDailyTargetUI();
+  // ซ่อน/แสดง empty hint
+  const empty = document.getElementById('dailyTargetEmpty');
+  if (empty) empty.style.display = dailyTarget ? 'none' : 'block';
 
   // Session log
   const logList = document.getElementById('sessionLogList');
@@ -2697,8 +2737,98 @@ function bumpCount() {
   const el = document.getElementById('count');
   el.innerText = items.length;
   el.classList.remove('bump');
-  void el.offsetWidth; // reflow
+  void el.offsetWidth;
   el.classList.add('bump');
+}
+
+// ===== PWA — SERVICE WORKER REGISTRATION =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+// ===== AUDIO BEEP (Web Audio API — ไม่ต้องโหลดไฟล์) =====
+const _ac = (function() {
+  try { return new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+})();
+
+function beep(type = 'ok') {
+  if (!_ac) return;
+  // Resume context ถ้าถูก suspend (iOS policy)
+  if (_ac.state === 'suspended') _ac.resume();
+  const o = _ac.createOscillator();
+  const g = _ac.createGain();
+  o.connect(g); g.connect(_ac.destination);
+  if (type === 'ok') {
+    // เสียงสั้น ๆ สูงใส — สแกนสำเร็จ
+    o.frequency.setValueAtTime(1046, _ac.currentTime); // C6
+    o.frequency.setValueAtTime(1318, _ac.currentTime + 0.06); // E6
+    g.gain.setValueAtTime(0.18, _ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, _ac.currentTime + 0.18);
+    o.start(_ac.currentTime); o.stop(_ac.currentTime + 0.18);
+  } else if (type === 'warn') {
+    // เสียงสองครั้ง — ผิด/เกิน
+    o.frequency.setValueAtTime(440, _ac.currentTime); // A4
+    g.gain.setValueAtTime(0.2, _ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, _ac.currentTime + 0.12);
+    o.start(_ac.currentTime); o.stop(_ac.currentTime + 0.12);
+    // ครั้งที่ 2
+    const o2 = _ac.createOscillator(), g2 = _ac.createGain();
+    o2.connect(g2); g2.connect(_ac.destination);
+    o2.frequency.setValueAtTime(330, _ac.currentTime + 0.18); // E4
+    g2.gain.setValueAtTime(0.2, _ac.currentTime + 0.18);
+    g2.gain.exponentialRampToValueAtTime(0.001, _ac.currentTime + 0.35);
+    o2.start(_ac.currentTime + 0.18); o2.stop(_ac.currentTime + 0.35);
+  } else if (type === 'done') {
+    // เสียงสามโน้ตขึ้น — แพ็กครบ
+    [1046, 1318, 1568].forEach((freq, i) => {
+      const oi = _ac.createOscillator(), gi = _ac.createGain();
+      oi.connect(gi); gi.connect(_ac.destination);
+      oi.frequency.setValueAtTime(freq, _ac.currentTime + i * 0.1);
+      gi.gain.setValueAtTime(0.18, _ac.currentTime + i * 0.1);
+      gi.gain.exponentialRampToValueAtTime(0.001, _ac.currentTime + i * 0.1 + 0.15);
+      oi.start(_ac.currentTime + i * 0.1);
+      oi.stop(_ac.currentTime + i * 0.1 + 0.15);
+    });
+  }
+}
+
+// ===== DAILY TARGET =====
+let dailyTarget = 0;
+(function loadDailyTarget() {
+  try { dailyTarget = parseInt(localStorage.getItem('dailyTarget') || '0', 10) || 0; } catch(e) {}
+})();
+
+function saveDailyTarget(v) {
+  dailyTarget = Math.max(0, parseInt(v, 10) || 0);
+  try { localStorage.setItem('dailyTarget', dailyTarget); } catch(e) {}
+  updateDailyTargetUI();
+}
+
+function updateDailyTargetUI() {
+  const wrap = document.getElementById('dailyTargetWrap');
+  if (!wrap) return;
+  const orders = Object.keys(sessionParcels).length;
+  const inp = document.getElementById('dailyTargetInput');
+  if (inp && inp !== document.activeElement) inp.value = dailyTarget || '';
+  if (!dailyTarget) {
+    document.getElementById('dailyTargetProgress').style.display = 'none';
+    return;
+  }
+  const pct = Math.min(100, Math.round((orders / dailyTarget) * 100));
+  const done = orders >= dailyTarget;
+  const progressEl = document.getElementById('dailyTargetProgress');
+  const barEl = document.getElementById('dailyTargetBar');
+  const labelEl = document.getElementById('dailyTargetLabel');
+  progressEl.style.display = 'block';
+  barEl.style.width = pct + '%';
+  barEl.style.background = done
+    ? 'linear-gradient(90deg,#2d9e6b,#00b894)'
+    : 'linear-gradient(90deg,var(--pink),#b57bee)';
+  labelEl.textContent = done
+    ? `🎉 ครบเป้าแล้ว! ${orders}/${dailyTarget} กล่อง`
+    : `${orders} / ${dailyTarget} กล่อง (${pct}%)`;
 }
 </script>
 </body>
