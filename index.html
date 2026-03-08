@@ -241,14 +241,37 @@
     .list-group-item {
       border: none !important;
       background: linear-gradient(135deg, #fff0f3, #fff8ff);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       border-radius: var(--radius-sm) !important;
-      padding: 12px 16px;
+      padding: 5px 10px;
       border-left: 3px solid var(--pink-light) !important;
       transition: all 0.2s ease;
-      font-size: 1.02rem;
+      font-size: 0.78rem;
     }
     .list-group-item:hover { transform: translateX(3px); border-left-color: var(--pink) !important; }
+
+    /* ===== ซ่อน Camera Selector ของ Html5QrcodeScanner ===== */
+    #reader__camera_selection,
+    #reader__dashboard_section_csr > span:first-child,
+    #reader select,
+    #reader__filescan_input,
+    #reader__header_message,
+    #reader__status_span { display: none !important; }
+    #reader__dashboard_section_swaplink { display: none !important; }
+    #reader__scan_region { border-radius: 16px; overflow: hidden; }
+    #reader__dashboard { padding: 6px 0 0 !important; background: transparent !important; border: none !important; }
+    #reader__dashboard_section_csr { text-align: center; }
+    #reader__dashboard_section_csr button {
+      font-family: 'Mitr', sans-serif !important;
+      font-size: 0.85rem !important;
+      border-radius: 20px !important;
+      padding: 6px 22px !important;
+      background: linear-gradient(135deg, var(--pink), #ff6b9d) !important;
+      color: white !important;
+      border: none !important;
+      box-shadow: 0 3px 10px rgba(255,143,171,0.35) !important;
+      margin-top: 6px !important;
+    }
 
     /* ===== EDIT BUTTON ===== */
     .btn-edit-inline {
