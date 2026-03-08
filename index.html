@@ -998,15 +998,15 @@ function undoRemove() {
 
 function startInactivityWatch() {
   clearInactivityWatch();
-  // ถ้ายังไม่มีพัสดุ หรือระบบยังไม่เริ่ม ไม่ต้องจับเวลา
   if (!currentP) return;
   inactivityTimer = setTimeout(() => {
-    // ตรวจสอบว่ายังมีพัสดุอยู่และยังไม่ได้จบงาน
-    if (currentP && !isFinishing) {
+    // ไม่แจ้งเตือนถ้าสินค้าครบถ้วนแล้ว (strict mode) หรือจบงานไปแล้ว
+    const isComplete = isStrictValidationMode && validateCurrentOrder();
+    if (currentP && !isFinishing && !isComplete) {
       speak("พัสดุชิ้นนี้สินค้ายังไม่ครบนะคะ", false);
-      // แจ้งเตือนซ้ำทุก 30 วิ
       inactivityRepeatTimer = setInterval(() => {
-        if (currentP && !isFinishing) {
+        const stillComplete = isStrictValidationMode && validateCurrentOrder();
+        if (currentP && !isFinishing && !stillComplete) {
           speak("พัสดุชิ้นนี้สินค้ายังไม่ครบนะคะ", false);
         } else {
           clearInactivityWatch();
