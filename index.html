@@ -379,15 +379,75 @@
       margin-top: 6px !important;
     }
 
-    /* ===== EDIT BUTTON ===== */
+    /* ===== SKELETON LOADER ===== */
+    .skeleton-wrap { padding: 8px 4px; }
+    .skeleton-line {
+      background: linear-gradient(90deg, #f0e6ea 25%, #ffe0ec 50%, #f0e6ea 75%);
+      background-size: 200% 100%;
+      border-radius: 8px;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    html.dark-mode .skeleton-line {
+      background: linear-gradient(90deg, #2a1820 25%, #3d1a2e 50%, #2a1820 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+
+    /* ===== COUNT BOUNCE ANIMATION ===== */
+    @keyframes countBounce {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.35); }
+      70%  { transform: scale(0.92); }
+      100% { transform: scale(1); }
+    }
+    #count.bump { animation: countBounce 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+
+    /* ===== CANCEL BUTTON — outline style ===== */
+    .btn-cancel {
+      background: transparent;
+      color: #888;
+      border: 2px solid #ddd;
+    }
+    .btn-cancel:hover { background: #f8f9fa; color: #555; border-color: #bbb; }
+    html.dark-mode .btn-cancel { color: #c9a8b8 !important; border-color: #5a2a40 !important; background: transparent !important; }
+    html.dark-mode .btn-cancel:hover { background: rgba(90,42,64,0.3) !important; }
+
+    /* ===== SAVE BUTTON READY GLOW ===== */
+    @keyframes saveGlow {
+      0%,100% { box-shadow: 0 4px 16px rgba(45,158,107,0.4); }
+      50%      { box-shadow: 0 4px 28px rgba(45,158,107,0.75), 0 0 0 4px rgba(45,158,107,0.15); }
+    }
+    #saveBtn.ready {
+      background: linear-gradient(135deg, #2d9e6b, #00b894) !important;
+      animation: saveGlow 1.6s ease-in-out infinite;
+    }
+
+    /* ===== EDIT PARCEL PILL BUTTON ===== */
     .btn-edit-inline {
-      padding: 3px 12px; font-size: 0.78rem;
-      border-radius: 10px; margin-left: 8px;
-      border: 1.5px solid var(--pink-light);
+      padding: 4px 14px; font-size: 0.75rem;
+      border-radius: 20px; border: 1.5px solid var(--pink-light);
       background: white; color: var(--pink);
       transition: all 0.2s; cursor: pointer;
+      white-space: nowrap; font-family: 'Mitr', sans-serif;
     }
-    .btn-edit-inline:hover { background: var(--pink-light); }
+    .btn-edit-inline:hover { background: var(--pink); color: white; border-color: var(--pink); }
+    html.dark-mode .btn-edit-inline { background: #2a1820 !important; border-color: #5a2a40 !important; }
+
+    /* ===== PULL TO REFRESH ===== */
+    #pullRefreshIndicator {
+      position: fixed; top: calc(var(--topbar-h) + 2px); left: 50%;
+      transform: translateX(-50%) translateY(-60px);
+      background: white; border-radius: 20px; padding: 6px 16px;
+      font-size: 0.75rem; color: var(--pink); font-family: 'Mitr', sans-serif;
+      box-shadow: 0 4px 16px rgba(255,143,171,0.3);
+      display: flex; align-items: center; gap: 6px;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 200; pointer-events: none;
+      border: 1.5px solid var(--pink-light);
+    }
+    #pullRefreshIndicator.visible { transform: translateX(-50%) translateY(0); }
+    html.dark-mode #pullRefreshIndicator { background: #2a1820; border-color: #5a2a40; }
 
     /* ===== CHECKLIST ===== */
     .order-checklist {
@@ -717,6 +777,12 @@
 </head>
 <body>
 
+<!-- Pull to refresh indicator -->
+<div id="pullRefreshIndicator">
+  <span id="pullRefreshIcon">↓</span>
+  <span id="pullRefreshText">ดึงเพื่อรีเฟรช</span>
+</div>
+
 <!-- แอนิเมชันพื้นหลัง -->
 <div id="pawBg"></div>
 <canvas id="overlayCanvas" style="display:none;"></canvas>
@@ -825,7 +891,7 @@
             <div class="section-title" style="margin-top:0; margin-bottom:4px;">📦 พัสดุปัจจุบัน</div>
             <div class="d-flex align-items-center gap-2">
               <span id="parcelId" style="font-weight:700; color:var(--pink); font-size:1.25rem; letter-spacing:0.5px; word-break:break-all;">-</span>
-              <button id="editParcelBtn" onclick="editParcelId()" class="btn btn-edit-inline" style="display:none">✏️</button>
+              <button id="editParcelBtn" onclick="editParcelId()" class="btn btn-edit-inline" style="display:none">✏️ แก้รหัส</button>
             </div>
           </div>
           <div class="col-5 text-center">
@@ -866,16 +932,29 @@
     <div class="card p-3">
       <div class="mb-3">
         <div id="search-reader" style="display:none; margin-bottom: 15px;"></div>
-        <div class="input-group">
-          <input id="searchInput" class="form-control rounded-start-4 p-3" placeholder="พิมพ์หรือสแกนรหัสพัสดุ..." onkeypress="handleEnter(event)" oninput="debouncedSearch()">
+        <!-- ข้อ 9: clear button ใน search input -->
+        <div class="input-group" style="position:relative;">
+          <input id="searchInput" class="form-control rounded-start-4 p-3" placeholder="พิมพ์หรือสแกนรหัสพัสดุ..." onkeypress="handleEnter(event)" oninput="debouncedSearch(); toggleClearBtn()">
+          <button id="clearSearchBtn" onclick="clearSearch()" style="display:none; position:absolute; right:90px; top:50%; transform:translateY(-50%); z-index:10; background:none; border:none; color:#aaa; font-size:1rem; cursor:pointer; padding:4px 8px; line-height:1;">✕</button>
           <button class="btn btn-primary px-3" onclick="startSearchScan()" title="สแกนด้วยกล้อง">📷</button>
           <button class="btn btn-success rounded-end-4 px-4" onclick="runSearch()">ค้นหา</button>
         </div>
         <div class="form-text text-muted ms-2 small">💡 ค้นหาได้ทั้งตัวพิมพ์เล็กและใหญ่</div>
       </div>
-      <div id="loadingSearch" class="text-center my-3" style="display:none">
-        <div class="spinner-border text-primary"></div>
-        <p class="small text-muted mt-2">กำลังค้นหา...</p>
+      <!-- ข้อ 1: Skeleton loader -->
+      <div id="loadingSearch" style="display:none">
+        <div class="skeleton-wrap">
+          <div class="skeleton-line" style="width:40%; height:12px; margin-bottom:12px;"></div>
+          <div class="skeleton-line" style="width:100%; height:44px; margin-bottom:8px;"></div>
+          <div class="skeleton-line" style="width:100%; height:44px; margin-bottom:8px;"></div>
+          <div class="skeleton-line" style="width:70%; height:44px;"></div>
+        </div>
+      </div>
+      <!-- ข้อ 8: Empty state -->
+      <div id="emptySearch" style="display:none; text-align:center; padding:32px 16px;">
+        <div style="font-size:3rem; margin-bottom:10px; opacity:0.5;">🔍</div>
+        <div style="font-size:0.95rem; font-weight:600; color:var(--text2); margin-bottom:6px;">ไม่พบข้อมูล</div>
+        <div style="font-size:0.78rem; color:var(--text3);">ลองตรวจสอบรหัสพัสดุอีกครั้ง<br>หรืออาจยังไม่ได้สแกนพัสดุใบนี้</div>
       </div>
       <div class="table-responsive">
         <table class="table table-hover small">
@@ -1646,7 +1725,7 @@ async function processFinalScan(text) {
     }
     lastScanTime = Date.now();
     items.push(upperText);
-    document.getElementById("count").innerText = items.length;
+    bumpCount();
     renderList();
     if (isStrictValidationMode) updateChecklistUI();
     setStatus("✔ เพิ่มสินค้า: " + upperText, "success");
@@ -1860,6 +1939,8 @@ async function resetAppForNext() {
   document.getElementById("editParcelBtn").style.display = "none";
   setStatus("รอพัสดุใบใหม่...", "light");
   document.getElementById("rec-label").innerText = "";
+  const sb = document.getElementById('saveBtn');
+  if (sb) sb.classList.remove('ready');
 }
 
 async function closeAppCompletely() {
@@ -2031,17 +2112,21 @@ function updateChecklistUI() {
   }
   document.getElementById('checklistContent').innerHTML = html;
   const alertBox = document.getElementById('orderStatusAlert');
+  const saveBtn = document.getElementById('saveBtn');
   alertBox.style.display = 'block';
   if (isAllMatched && !hasOverScan) {
     alertBox.className = "alert alert-success mt-2 mb-0 py-2";
     alertBox.innerHTML = "<strong>สมบูรณ์!</strong> สินค้าครบถ้วน";
     vibrate([80, 60, 80]);
     speak("สินค้าครบถ้วนแล้วค่ะ", false);
+    if (saveBtn) saveBtn.classList.add('ready');
   } else if (hasOverScan) {
     alertBox.className = "alert alert-danger mt-2 mb-0 py-2";
     alertBox.innerHTML = "<strong>ระวัง!</strong> สินค้าผิดรายการ หรือ เกินจำนวน";
+    if (saveBtn) saveBtn.classList.remove('ready');
   } else {
     alertBox.className = "alert alert-warning mt-2 mb-0 py-2";
+    if (saveBtn) saveBtn.classList.remove('ready');
     const missing = expectedItemsArray.filter(item => (scannedItemsMap[item.sku] || 0) < item.qty);
     if (missing.length === 1) {
       const m = missing[0];
@@ -2172,12 +2257,13 @@ function openTab(tab, btn) {
   document.getElementById(tab).style.display = 'block';
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  // scroll to top เมื่อสลับ tab
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   if (tab === 'dash') {
     refreshDash();
     if (!document.getElementById('dashStart').value) {
       setPreset('today', document.querySelector('.preset-btn'));
     } else {
-      // มี date อยู่แล้ว — โหลดใหม่เฉพาะถ้าเกิน 5 นาที หรือ params เปลี่ยน
       const start = document.getElementById('dashStart').value;
       const end   = document.getElementById('dashEnd').value;
       const key = `${start}|${end}`;
@@ -2347,21 +2433,22 @@ async function runSearch() {
   const q = document.getElementById("searchInput").value.trim();
   if (!q) return;
   document.getElementById("loadingSearch").style.display = "block";
+  document.getElementById("emptySearch").style.display = "none";
   document.getElementById("resultBody").innerHTML = "";
+  document.getElementById("tableHead").innerHTML = "";
   try {
     const res = await callGAS("searchData", { query: q });
     document.getElementById("loadingSearch").style.display = "none";
     const tb = document.getElementById("resultBody"), th = document.getElementById("tableHead");
-    tb.innerHTML = ""; th.innerHTML = "";
     if (!res || res.length === 0) {
-      tb.innerHTML = "<tr><td colspan='5' class='text-center py-4 text-muted'>❌ ไม่พบข้อมูล</td></tr>";
+      document.getElementById("emptySearch").style.display = "block";
       speak("ไม่พบข้อมูลค่ะ"); return;
     }
+    document.getElementById("emptySearch").style.display = "none";
     const max = Math.max(...res.map(r => r.length));
     let head = "<tr><th>วันที่</th><th>รหัสพัสดุ</th><th>วิดีโอ</th>";
     for (let i = 3; i < max; i++) head += `<th>สินค้า ${i - 2}</th>`;
     th.innerHTML = head + "</tr>";
-    // สร้าง string ทั้งหมดก่อน set ครั้งเดียว (ป้องกัน XSS + เร็วกว่า += loop)
     const rows = res.map(row => {
       const cells = row.map(cell => {
         const s = String(cell ?? '');
@@ -2379,7 +2466,46 @@ async function runSearch() {
   }
 }
 
-// Background Paw Builder
+// ===== PULL TO REFRESH =====
+(function initPullToRefresh() {
+  let startY = 0, pulling = false, triggered = false;
+  const indicator = document.getElementById('pullRefreshIndicator');
+  const icon = document.getElementById('pullRefreshIcon');
+  const text = document.getElementById('pullRefreshText');
+  const THRESHOLD = 75;
+
+  document.addEventListener('touchstart', e => {
+    if (window.scrollY === 0) { startY = e.touches[0].clientY; pulling = true; triggered = false; }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 20) {
+      indicator.classList.add('visible');
+      if (dy > THRESHOLD) {
+        icon.textContent = '↺'; text.textContent = 'ปล่อยเพื่อรีเฟรช';
+        triggered = true;
+      } else {
+        icon.textContent = '↓'; text.textContent = 'ดึงเพื่อรีเฟรช';
+        triggered = false;
+      }
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    if (triggered) {
+      icon.textContent = '⏳'; text.textContent = 'กำลังรีเฟรช...';
+      refreshAllCache().finally(() => {
+        setTimeout(() => indicator.classList.remove('visible'), 600);
+      });
+    } else {
+      indicator.classList.remove('visible');
+    }
+  });
+})();
 (function() {
   const pawBg = document.getElementById('pawBg');
   if (!pawBg) return;
@@ -2438,8 +2564,28 @@ let _searchTimer = null;
 function debouncedSearch() {
   clearTimeout(_searchTimer);
   const q = document.getElementById('searchInput').value.trim();
-  if (q.length < 4) return; // ค้นเมื่อพิมพ์ >= 4 ตัว
+  if (q.length < 4) return;
   _searchTimer = setTimeout(runSearch, 500);
+}
+function toggleClearBtn() {
+  const v = document.getElementById('searchInput').value;
+  document.getElementById('clearSearchBtn').style.display = v ? 'block' : 'none';
+}
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('clearSearchBtn').style.display = 'none';
+  document.getElementById('resultBody').innerHTML = '';
+  document.getElementById('tableHead').innerHTML = '';
+  document.getElementById('emptySearch').style.display = 'none';
+}
+
+// ===== COUNT BOUNCE =====
+function bumpCount() {
+  const el = document.getElementById('count');
+  el.innerText = items.length;
+  el.classList.remove('bump');
+  void el.offsetWidth; // reflow
+  el.classList.add('bump');
 }
 </script>
 </body>
