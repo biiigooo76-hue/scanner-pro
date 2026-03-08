@@ -998,14 +998,24 @@ function clearInactivityWatch() {
 }
 
 // --- API Helper ---
-async function callGAS(action, payload = {}) {
-  const res = await fetch(GAS_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify({ action, ...payload })
-  });
-  const text = await res.text();
-  try { return JSON.parse(text); } catch { return text; }
+async function callGAS(action, payload = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action, ...payload }),
+      signal: controller.signal
+    });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return text; }
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error(`หมดเวลาเชื่อมต่อ (${timeoutMs/1000} วินาที) กรุณาลองใหม่`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // --- Speech ---
@@ -1188,7 +1198,24 @@ function startScan() {
 
 function onScanBuffer(text, result) {
   const now = Date.now();
-  if (isFinishing || now - lastScanTime < 2500) return;
+  if (isFinishing) return;
+
+  const upperText = text.trim().toUpperCase();
+  const isProduct = upperText.startsWith("B");
+
+  // สำหรับสินค้า: ถ้า SKU นี้ยังต้องการอีก ลด cooldown เหลือ 800ms
+  // สำหรับพัสดุ/อื่นๆ: คง cooldown 2500ms ป้องกัน double-scan
+  let cooldown = 2500;
+  if (isProduct && isStrictValidationMode) {
+    const reqItem = expectedItemsArray.find(i => i.sku === upperText);
+    const scanned = scannedItemsMap[upperText] || 0;
+    if (reqItem && scanned < reqItem.qty) cooldown = 800;
+  } else if (isProduct) {
+    cooldown = 800; // โหมดปกติไม่มี checklist ก็ลด cooldown
+  }
+
+  if (now - lastScanTime < cooldown) return;
+
   let yPos = 9999;
   if (result && result.result && result.result.location) yPos = result.result.location.topLeftCorner.y;
   scanBuffer.push({ text, y: yPos });
@@ -1378,27 +1405,33 @@ async function finishWork(isManual = false) {
   clearInactivityWatch(); // หยุดแจ้งเตือนเมื่อจบงาน
   const snapshotItems = [...items];
   const snapshotParcelId = pId;
-  const videoChunks = await stopCameraRecording();
-  const count = snapshotItems.length;
-  const summaryMsg = count > 0 ? `บันทึกสินค้า ${count} ชิ้น เรียบร้อยค่ะ` : `บันทึกพัสดุเบื้องหลังเรียบร้อยค่ะ`;
-  
-  if (isManual) {
-    await closeAppCompletely();
-    speak(summaryMsg, false);
-    setTimeout(() => { isFinishing = false; }, 1500);
-  } else {
-    await resetAppForNext();
-    speak(summaryMsg + " สแกนพัสดุใบถัดไปได้เลยค่ะ", false);
-    setStatus("⏳ กำลังเตรียมรับใบถัดไป...", "light");
+  const snapshotRemark = currentRemark;
+  try {
+    const videoChunks = await stopCameraRecording();
+    const count = snapshotItems.length;
+    const summaryMsg = count > 0 ? `บันทึกสินค้า ${count} ชิ้น เรียบร้อยค่ะ` : `บันทึกพัสดุเบื้องหลังเรียบร้อยค่ะ`;
+
+    if (isManual) {
+      await closeAppCompletely();
+      speak(summaryMsg, false);
+    } else {
+      await resetAppForNext();
+      speak(summaryMsg + " สแกนพัสดุใบถัดไปได้เลยค่ะ", false);
+      setStatus("⏳ กำลังเตรียมรับใบถัดไป...", "light");
+    }
+    sessionParcels[snapshotParcelId] = count;
+    processBackgroundUpload(snapshotParcelId, snapshotItems, videoChunks, snapshotRemark);
+  } catch (err) {
+    console.error('[finishWork error]', err);
+    speak("เกิดข้อผิดพลาด กรุณาลองใหม่ค่ะ", false);
+  } finally {
+    // รับประกันว่า isFinishing จะถูก reset เสมอ ไม่ว่าจะ error หรือไม่
     setTimeout(() => {
       isFinishing = false;
       lastScanTime = Date.now();
-      setStatus("✔ พร้อมรับพัสดุใบถัดไป", "success");
+      if (!isManual) setStatus("✔ พร้อมรับพัสดุใบถัดไป", "success");
     }, 1500);
   }
-  sessionParcels[snapshotParcelId] = count;
-  const snapshotRemark = currentRemark;
-  processBackgroundUpload(snapshotParcelId, snapshotItems, videoChunks, snapshotRemark);
 }
 
 async function processBackgroundUpload(pId, itemsArr, chunks, remarkNote = '') {
