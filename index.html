@@ -210,13 +210,149 @@
       color: white;
     }
 
-    /* ===== STATUS BADGE ===== */
-    .status-badge {
-      display: inline-block;
-      padding: 8px 20px; border-radius: 50px;
-      font-size: 0.95rem; font-weight: 500;
-      margin-top: 10px; transition: all 0.4s ease;
+    /* ===== STATUS BAR FULL WIDTH ===== */
+    .status-bar-full {
+      display: block; width: 100%;
+      padding: 8px 14px; border-radius: var(--radius-xs);
+      font-size: 0.82rem; font-weight: 500;
+      margin-top: 10px; transition: all 0.35s ease;
       font-family: 'Mitr', sans-serif;
+      background: #f8f9fa; color: #6c757d;
+      border-left: 4px solid #dee2e6;
+      text-align: left;
+    }
+
+    /* ===== ITEM LIST SCROLL ===== */
+    .item-list-scroll {
+      max-height: 220px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--pink-light) transparent;
+    }
+    .item-list-scroll::-webkit-scrollbar { width: 4px; }
+    .item-list-scroll::-webkit-scrollbar-track { background: transparent; }
+    .item-list-scroll::-webkit-scrollbar-thumb { background: var(--pink-light); border-radius: 4px; }
+
+    /* ===== STICKY ACTION BAR ===== */
+    .action-bar-sticky {
+      position: sticky;
+      bottom: calc(var(--nav-h) + 22px);
+      z-index: 50;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 10px 0 6px;
+      margin-top: 12px;
+      border-top: 1px solid var(--pink-light);
+    }
+
+    /* ===== DELETE BUTTON LARGER TOUCH TARGET ===== */
+    .list-group-item .btn-delete-item {
+      min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px; border: none; background: transparent;
+      color: #dc3545; font-size: 1rem; cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .list-group-item .btn-delete-item:hover { background: #fff0f0; }
+
+    /* ===== PARCEL BOX FLASH ANIMATION ===== */
+    @keyframes parcelFlash {
+      0%   { box-shadow: 0 0 0 0 rgba(45,158,107,0.6); background: linear-gradient(135deg,#e8fff0,#f0fff4); }
+      50%  { box-shadow: 0 0 0 12px rgba(45,158,107,0); }
+      100% { box-shadow: none; background: linear-gradient(135deg, rgba(255,240,243,0.7), rgba(255,248,255,0.7)); }
+    }
+    .parcel-box.flash-new { animation: parcelFlash 0.7s ease-out forwards; }
+
+    /* ===== SCANNER VIEWFINDER OVERLAY ===== */
+    .scanner-wrap { position: relative; }
+    .scanner-viewfinder {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .scanner-viewfinder::before {
+      content: '';
+      width: 200px; height: 120px;
+      border: 2.5px solid rgba(255,143,171,0.85);
+      border-radius: 12px;
+      box-shadow: 0 0 0 2000px rgba(0,0,0,0.18);
+    }
+    .scanner-viewfinder-label {
+      position: absolute; bottom: 18px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.72rem; color: rgba(255,255,255,0.85);
+      background: rgba(0,0,0,0.35); padding: 3px 12px;
+      border-radius: 20px; white-space: nowrap;
+      font-family: 'Mitr', sans-serif; pointer-events: none;
+    }
+
+    /* ===== ONBOARDING TOOLTIP ===== */
+    .onboarding-tip {
+      background: linear-gradient(135deg, #fff8e1, #fffde7);
+      border: 1.5px solid #ffd166; border-radius: var(--radius-sm);
+      padding: 12px 14px; margin-bottom: 14px;
+      font-size: 0.8rem; color: var(--text2);
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .onboarding-tip .ob-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 1px; }
+    .onboarding-tip .ob-close {
+      margin-left: auto; background: none; border: none;
+      color: var(--text3); cursor: pointer; font-size: 1rem;
+      padding: 0 2px; flex-shrink: 0;
+    }
+
+    /* ===== DARK MODE ===== */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --pink-pale:  #1e1218;
+        --card-bg:    rgba(40,28,36,0.92);
+        --surface:    #2a1e26;
+        --surface2:   #321c28;
+        --text:       #f0d6e0;
+        --text2:      #c9a8b8;
+        --text3:      #886070;
+        --border:     rgba(120,60,80,0.4);
+        --border2:    #6b3045;
+      }
+      body { background: #1a1018; }
+      body::before {
+        background:
+          radial-gradient(ellipse 80% 60% at 10% 10%, #2d1520 0%, transparent 60%),
+          radial-gradient(ellipse 60% 50% at 90% 90%, #1e1030 0%, transparent 60%),
+          radial-gradient(ellipse 50% 40% at 50% 50%, #2a1a10 0%, transparent 70%);
+      }
+      .card { background: rgba(40,28,36,0.9); border-color: rgba(120,60,80,0.35); }
+      #app-header { background: rgba(30,18,24,0.88); border-color: #4a2535; }
+      #app-tabs { background: rgba(36,24,30,0.9); border-color: rgba(120,60,80,0.4); }
+      .list-group-item { background: linear-gradient(135deg, #2a1822, #261a2c); }
+      .parcel-box { background: linear-gradient(135deg, rgba(50,28,40,0.7), rgba(40,24,50,0.7)); }
+      .status-bar-full { background: #251820; color: #9a7888; border-left-color: #4a2535; }
+      .action-bar-sticky { background: rgba(30,18,24,0.94); border-top-color: #4a2535; }
+      .onboarding-tip { background: linear-gradient(135deg,#241a08,#1e1a00); border-color: #6b4e00; }
+      .dash-table-card { background: rgba(40,28,36,0.8); }
+      .stat-card { background: rgba(40,28,36,0.8); }
+      input, select, .form-control { background: #2a1e26 !important; color: var(--text) !important; border-color: #4a2535 !important; }
+    }
+
+    /* ===== STATUS BAR ===== */
+
+    /* ===== STATUS BAR ===== */
+    .status-bar-full.bg-light    { background:#f8f9fa !important; color:#6c757d; border-left-color:#dee2e6; }
+    .status-bar-full.bg-success  { background:#d1fae5 !important; color:#065f46; border-left-color:var(--success); }
+    .status-bar-full.bg-danger   { background:#fee2e2 !important; color:#991b1b; border-left-color:var(--danger); }
+    .status-bar-full.bg-warning  { background:#fef3c7 !important; color:#92400e; border-left-color:#f59e0b; }
+    .status-bar-full.bg-primary  { background:#dbeafe !important; color:#1e40af; border-left-color:#3b82f6; }
+    .status-bar-full.bg-info     { background:#e0f2fe !important; color:#0369a1; border-left-color:#0ea5e9; }
+    .status-bar-full.bg-secondary{ background:#f1f5f9 !important; color:#475569; border-left-color:#94a3b8; }
+    .status-bar-full.text-muted  { color:#6c757d !important; }
+    @media (prefers-color-scheme: dark) {
+      .status-bar-full.bg-success  { background:rgba(6,78,59,0.4) !important; color:#6ee7b7; }
+      .status-bar-full.bg-danger   { background:rgba(127,29,29,0.4) !important; color:#fca5a5; }
+      .status-bar-full.bg-primary  { background:rgba(30,58,138,0.4) !important; color:#93c5fd; }
+      .status-bar-full.bg-warning  { background:rgba(120,53,15,0.4) !important; color:#fcd34d; }
     }
 
     /* ===== REC UI ===== */
@@ -315,6 +451,36 @@
       font-family: 'Mitr', sans-serif;
     }
     .remark-btn:hover, .remark-btn.selected { background: #ffd166; border-color: #ffd166; color: #5a3e00; }
+
+    /* ===== CLASS-BASED DARK MODE (override media query) ===== */
+    body.dark-mode {
+      --pink-pale:  #1e1218;
+      --card-bg:    rgba(40,28,36,0.92);
+      --surface:    #2a1e26;
+      --surface2:   #321c28;
+      --text:       #f0d6e0;
+      --text2:      #c9a8b8;
+      --text3:      #886070;
+      --border:     rgba(120,60,80,0.4);
+      --border2:    #6b3045;
+      background: #1a1018;
+    }
+    body.dark-mode::before {
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 10%, #2d1520 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 90%, #1e1030 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, #2a1a10 0%, transparent 70%);
+    }
+    body.dark-mode .card { background: rgba(40,28,36,0.9) !important; border-color: rgba(120,60,80,0.35) !important; }
+    body.dark-mode #app-header { background: rgba(30,18,24,0.88) !important; border-color: #4a2535 !important; }
+    body.dark-mode #app-tabs { background: rgba(36,24,30,0.9) !important; border-color: rgba(120,60,80,0.4) !important; }
+    body.dark-mode .list-group-item { background: linear-gradient(135deg, #2a1822, #261a2c) !important; }
+    body.dark-mode .parcel-box { background: linear-gradient(135deg, rgba(50,28,40,0.7), rgba(40,24,50,0.7)) !important; }
+    body.dark-mode .status-bar-full { background: #251820 !important; color: #9a7888 !important; border-left-color: #4a2535 !important; }
+    body.dark-mode .action-bar-sticky { background: rgba(30,18,24,0.94) !important; border-top-color: #4a2535 !important; }
+    body.dark-mode input, body.dark-mode select, body.dark-mode .form-control { background: #2a1e26 !important; color: var(--text) !important; border-color: #4a2535 !important; }
+    body.dark-mode .dash-table-card, body.dark-mode .stat-card { background: rgba(40,28,36,0.8) !important; }
+    body.dark-mode .onboarding-tip { background: linear-gradient(135deg,#241a08,#1e1a00) !important; border-color: #6b4e00 !important; }
 
     /* ===== PARCEL INFO BOX ===== */
     .parcel-box {
@@ -514,7 +680,10 @@
     </div>
   </div>
   <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0;">
-    <span id="networkBadge" style="font-size:0.68rem; font-weight:600; padding:3px 9px; border-radius:20px; letter-spacing:0.2px; background:#d1fae5; color:#065f46; transition:all 0.3s ease;">🟢 ออนไลน์</span>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <button id="darkModeBtn" onclick="toggleDarkMode()" title="สลับธีม" style="background:none; border:none; cursor:pointer; font-size:1.1rem; padding:2px 4px; border-radius:8px; line-height:1;">🌙</button>
+      <span id="networkBadge" style="font-size:0.68rem; font-weight:600; padding:3px 9px; border-radius:20px; letter-spacing:0.2px; background:#d1fae5; color:#065f46; transition:all 0.3s ease;">🟢 ออนไลน์</span>
+    </div>
     <span id="syncTimeBadge" style="font-size:0.62rem; color:var(--text3);">—</span>
   </div>
 </div>
@@ -547,9 +716,25 @@
         <video id="video-preview" autoplay playsinline muted></video>
       </div>
 
-      <button id="startBtn" onclick="initScanner()" class="btn-custom btn-main mb-3 w-100 shadow">เริ่มระบบสแกน</button>
+      <!-- Onboarding tip: แสดงครั้งแรก ซ่อนหลัง dismiss -->
+      <div id="onboardingTip" class="onboarding-tip" style="display:none; text-align:left;">
+        <span class="ob-icon">💡</span>
+        <div>
+          <strong>วิธีใช้งาน:</strong><br>
+          1️⃣ กด <em>"เริ่มระบบสแกน"</em> แล้วสแกน <strong>รหัสพัสดุ</strong> ก่อน<br>
+          2️⃣ สแกน <strong>บาร์โค้ดสินค้า</strong> ทุกชิ้นในกล่อง<br>
+          3️⃣ กด <strong>"บันทึกและจบงาน"</strong> เมื่อแพ็กครบ
+        </div>
+        <button class="ob-close" onclick="dismissOnboarding()">✕</button>
+      </div>
+
+      <button id="startBtn" onclick="initScanner()" class="btn-custom btn-main mb-3 w-100 shadow">🚀 เริ่มระบบสแกน</button>
       
-      <div id="reader" style="display:none"></div>
+      <div id="reader" style="display:none" class="scanner-wrap">
+        <div class="scanner-viewfinder">
+          <span class="scanner-viewfinder-label">วาง barcode ในกรอบ</span>
+        </div>
+      </div>
       
       <div id="orderChecklistPanel" class="order-checklist text-start shadow-sm mb-3">
         <h6 class="fw-bold mb-2" style="color:var(--text)">รายการที่ต้องแพ็ก</h6>
@@ -584,38 +769,42 @@
         </div>
       </div>
       
-      <div class="parcel-box mt-3">
+      <div class="parcel-box mt-3" id="parcelBox">
         <div class="row align-items-center">
           <div class="col-7 text-start" style="border-right: 1.5px solid var(--pink-light);">
-            <div class="section-title" style="margin-top:0; margin-bottom:4px;">พัสดุปัจจุบัน</div>
-            <div class="d-flex align-items-center">
-              <span id="parcelId" style="font-weight:600; color:var(--pink); font-size:1.1rem;">-</span>
+            <div class="section-title" style="margin-top:0; margin-bottom:4px;">📦 พัสดุปัจจุบัน</div>
+            <div class="d-flex align-items-center gap-2">
+              <span id="parcelId" style="font-weight:700; color:var(--pink); font-size:1.25rem; letter-spacing:0.5px; word-break:break-all;">-</span>
               <button id="editParcelBtn" onclick="editParcelId()" class="btn btn-edit-inline" style="display:none">✏️</button>
             </div>
           </div>
           <div class="col-5 text-center">
-            <div class="section-title" style="margin-top:0; margin-bottom:4px;">จำนวนสินค้า</div>
-            <div id="count" style="font-size:2.2rem; font-weight:600; color:var(--pink);">0</div>
+            <div class="section-title" style="margin-top:0; margin-bottom:2px;">🛍 สินค้า</div>
+            <div id="count" style="font-size:2.6rem; font-weight:700; color:var(--pink); line-height:1;">0</div>
+            <div style="font-size:0.65rem; color:var(--text3); margin-top:1px;">ชิ้น</div>
           </div>
         </div>
       </div>
-      
-      <div id="statusLabel" class="status-badge bg-light text-muted">รอเริ่มระบบ...</div>
+
+      <!-- Status bar — full width ใต้ parcel box -->
+      <div id="statusLabel" class="status-bar-full">รอเริ่มระบบ...</div>
       
       <div class="mt-3 text-start">
         <div class="section-title">รายการสินค้าในกล่อง</div>
-        <ul id="itemList" class="list-group"></ul>
+        <!-- Fix 7: จำกัดความสูง scroll เมื่อรายการเยอะ -->
+        <ul id="itemList" class="list-group item-list-scroll"></ul>
       </div>
       
       <button id="refreshCacheBtn" onclick="refreshAllCache()" class="btn btn-sm mb-2 w-100 mt-3" style="display:none; border-radius:18px; border:1.5px solid var(--pink-light); color:var(--pink); background:white; font-family:'Mitr',sans-serif; font-size:0.88rem; padding:8px;">🔄 ดึงข้อมูลล่าสุด (สินค้า & ออเดอร์)</button>
       
-      <div id="action-buttons" class="mt-4" style="display:none">
+      <!-- Fix 6: sticky action bar ไม่ถูก nav บัง + Fix 1: col-7/col-5 -->
+      <div id="action-buttons" class="action-bar-sticky" style="display:none">
         <div class="row g-2">
-          <div class="col-8">
-            <button id="saveBtn" onclick="finishWork(true)" class="btn-custom btn-save w-100">บันทึกและจบงาน</button>
+          <div class="col-7">
+            <button id="saveBtn" onclick="finishWork(true)" class="btn-custom btn-save w-100">💾 บันทึกและจบงาน</button>
           </div>
-          <div class="col-4">
-            <button id="cancelBtn" onclick="cancelWork()" class="btn-custom btn-cancel w-100">ยกเลิก</button>
+          <div class="col-5">
+            <button id="cancelBtn" onclick="cancelWork()" class="btn-custom btn-cancel w-100">✖ ยกเลิก</button>
           </div>
         </div>
       </div>
@@ -628,7 +817,7 @@
       <div class="mb-3">
         <div id="search-reader" style="display:none; margin-bottom: 15px;"></div>
         <div class="input-group">
-          <input id="searchInput" class="form-control rounded-start-4 p-3" placeholder="พิมพ์หรือสแกนรหัสพัสดุ..." onkeypress="handleEnter(event)">
+          <input id="searchInput" class="form-control rounded-start-4 p-3" placeholder="พิมพ์หรือสแกนรหัสพัสดุ..." onkeypress="handleEnter(event)" oninput="debouncedSearch()">
           <button class="btn btn-primary px-3" onclick="startSearchScan()" title="สแกนด้วยกล้อง">📷</button>
           <button class="btn btn-success rounded-end-4 px-4" onclick="runSearch()">ค้นหา</button>
         </div>
@@ -1454,8 +1643,8 @@ async function processFinalScan(text) {
 function setStatus(msg, type) {
   const el = document.getElementById("statusLabel");
   el.innerText = msg;
-  const map = { success: "bg-success text-white", danger: "bg-danger text-white", warning: "bg-warning text-dark", primary: "bg-primary text-white", info: "bg-info text-white" };
-  el.className = "status-badge " + (map[type] || "bg-light text-muted");
+  const map = { success: "bg-success", danger: "bg-danger", warning: "bg-warning", primary: "bg-primary", info: "bg-info", secondary: "bg-secondary" };
+  el.className = "status-bar-full " + (map[type] || "bg-light text-muted");
 }
 
 function editParcelId() {
@@ -1476,6 +1665,9 @@ function processNewParcel(text, carrier) {
   renderList();
   setStatus((wasEditing ? "✏️ แก้ไขรหัสพัสดุเป็น: " : `📦 พัสดุ ${carrier}: `) + text, "primary");
   document.getElementById("editParcelBtn").style.display = "inline-block";
+  // Flash animation บน parcel box
+  const box = document.getElementById('parcelBox');
+  if (box) { box.classList.remove('flash-new'); void box.offsetWidth; box.classList.add('flash-new'); }
   const lastFour = text.length >= 4 ? text.slice(-4) : text;
   if (wasEditing) {
     speak(`แก้ไขเป็นรหัส ${lastFour.split('').join(' ')} เรียบร้อยค่ะ`);
@@ -1637,6 +1829,14 @@ async function closeAppCompletely() {
   document.getElementById("itemList").innerHTML = "";
   document.getElementById("editParcelBtn").style.display = "none";
   setStatus("จบงานแล้ว รอเริ่มใหม่...", "light");
+  // Flash success บนการ์ดหลัก
+  const card = document.querySelector('#scan .card');
+  if (card) {
+    card.style.transition = 'box-shadow 0.2s, border-color 0.2s';
+    card.style.boxShadow = '0 0 0 3px rgba(45,158,107,0.5)';
+    card.style.borderColor = 'rgba(45,158,107,0.6)';
+    setTimeout(() => { card.style.boxShadow = ''; card.style.borderColor = ''; }, 800);
+  }
   const startBtn = document.getElementById("startBtn");
   startBtn.style.display = "block"; startBtn.disabled = false;
   startBtn.innerText = "🚀 เริ่มระบบ / โหลดข้อมูลสินค้า";
@@ -1649,7 +1849,7 @@ function renderList() {
   [...items].reverse().forEach((c, i) => {
     let li = document.createElement("li");
     li.className = "list-group-item d-flex justify-content-between align-items-center animate__animated animate__slideInLeft";
-    li.innerHTML = `<span>${escHtml(productMap[c] || c)}</span> <button class="btn btn-sm text-danger" onclick="removeItem(${items.length - 1 - i})">✕</button>`;
+    li.innerHTML = `<span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(productMap[c] || c)}</span><button class="btn-delete-item" onclick="removeItem(${items.length - 1 - i})" title="ลบ">✕</button>`;
     ul.appendChild(li);
   });
 }
@@ -2145,6 +2345,43 @@ async function runSearch() {
     pawBg.appendChild(el);
   }
 })();
+
+// ===== ONBOARDING =====
+(function initOnboarding() {
+  try {
+    if (!localStorage.getItem('ob_dismissed')) {
+      const tip = document.getElementById('onboardingTip');
+      if (tip) tip.style.display = 'flex';
+    }
+  } catch(e) {}
+})();
+function dismissOnboarding() {
+  const tip = document.getElementById('onboardingTip');
+  if (tip) { tip.style.opacity = '0'; tip.style.transition = 'opacity 0.3s'; setTimeout(() => tip.style.display = 'none', 300); }
+  try { localStorage.setItem('ob_dismissed', '1'); } catch(e) {}
+}
+
+// ===== DARK MODE TOGGLE =====
+(function initDarkMode() {
+  try {
+    const saved = localStorage.getItem('darkMode');
+    if (saved === '1') { document.body.classList.add('dark-mode'); document.getElementById('darkModeBtn').textContent = '☀️'; }
+  } catch(e) {}
+})();
+function toggleDarkMode() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  document.getElementById('darkModeBtn').textContent = isDark ? '☀️' : '🌙';
+  try { localStorage.setItem('darkMode', isDark ? '1' : '0'); } catch(e) {}
+}
+
+// ===== DEBOUNCE SEARCH =====
+let _searchTimer = null;
+function debouncedSearch() {
+  clearTimeout(_searchTimer);
+  const q = document.getElementById('searchInput').value.trim();
+  if (q.length < 4) return; // ค้นเมื่อพิมพ์ >= 4 ตัว
+  _searchTimer = setTimeout(runSearch, 500);
+}
 </script>
 </body>
 </html>
