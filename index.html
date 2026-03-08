@@ -791,6 +791,35 @@ let expectedItemsArray = [], scannedItemsMap = {}, isStrictValidationMode = fals
 let currentRemark = ''; 
 let mediaRecorder, recordedChunks = [], cameraStream = null, isRecording = false;
 
+// --- Inactivity Alert ---
+let inactivityTimer = null;       // Timer 5 วิ แจ้งครั้งแรก
+let inactivityRepeatTimer = null; // Timer 30 วิ แจ้งซ้ำ
+
+function startInactivityWatch() {
+  clearInactivityWatch();
+  // ถ้ายังไม่มีพัสดุ หรือระบบยังไม่เริ่ม ไม่ต้องจับเวลา
+  if (!currentP) return;
+  inactivityTimer = setTimeout(() => {
+    // ตรวจสอบว่ายังมีพัสดุอยู่และยังไม่ได้จบงาน
+    if (currentP && !isFinishing) {
+      speak("พัสดุชิ้นนี้สินค้ายังไม่ครบนะคะ", false);
+      // แจ้งเตือนซ้ำทุก 30 วิ
+      inactivityRepeatTimer = setInterval(() => {
+        if (currentP && !isFinishing) {
+          speak("พัสดุชิ้นนี้สินค้ายังไม่ครบนะคะ", false);
+        } else {
+          clearInactivityWatch();
+        }
+      }, 30000);
+    }
+  }, 5000);
+}
+
+function clearInactivityWatch() {
+  if (inactivityTimer) { clearTimeout(inactivityTimer); inactivityTimer = null; }
+  if (inactivityRepeatTimer) { clearInterval(inactivityRepeatTimer); inactivityRepeatTimer = null; }
+}
+
 // --- API Helper ---
 async function callGAS(action, payload = {}) {
   const res = await fetch(GAS_URL, {
@@ -1040,6 +1069,7 @@ async function processFinalScan(text) {
     renderList();
     if (isStrictValidationMode) updateChecklistUI();
     setStatus("✔ เพิ่มสินค้า: " + upperText, "success");
+    startInactivityWatch(); // รีเซ็ตจับเวลาทุกครั้งที่สแกนสินค้า
   } else if (isFlash || isJT) {
     lastScanTime = Date.now();
     const carrier = isFlash ? "แฟลช" : "เจ แอนด์ ที";
@@ -1135,6 +1165,7 @@ async function cancelWork() {
   });
   if (result.isConfirmed) {
     isFinishing = true;
+    clearInactivityWatch(); // หยุดแจ้งเตือนเมื่อยกเลิกงาน
     speak("ยกเลิกงานและไม่บันทึกข้อมูลค่ะ");
     await stopCameraRecording();
     recordedChunks = [];
@@ -1165,6 +1196,7 @@ async function finishWork(isManual = false) {
     }
   }
   isFinishing = true;
+  clearInactivityWatch(); // หยุดแจ้งเตือนเมื่อจบงาน
   const snapshotItems = [...items];
   const snapshotParcelId = pId;
   const videoChunks = await stopCameraRecording();
