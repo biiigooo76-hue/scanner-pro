@@ -441,20 +441,7 @@
     .btn-edit-inline:hover { background: var(--pink); color: white; border-color: var(--pink); }
     html.dark-mode .btn-edit-inline { background: #2a1820 !important; border-color: #5a2a40 !important; }
 
-    /* ===== PULL TO REFRESH ===== */
-    #pullRefreshIndicator {
-      position: fixed; top: calc(var(--topbar-h) + 2px); left: 50%;
-      transform: translateX(-50%) translateY(-60px);
-      background: white; border-radius: 20px; padding: 6px 16px;
-      font-size: 0.75rem; color: var(--pink); font-family: 'Mitr', sans-serif;
-      box-shadow: 0 4px 16px rgba(255,143,171,0.3);
-      display: flex; align-items: center; gap: 6px;
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-      z-index: 200; pointer-events: none;
-      border: 1.5px solid var(--pink-light);
-    }
-    #pullRefreshIndicator.visible { transform: translateX(-50%) translateY(0); }
-    html.dark-mode #pullRefreshIndicator { background: #2a1820; border-color: #5a2a40; }
+    /* ===== PULL TO REFRESH — silent (ไม่แสดง indicator) ===== */
 
     /* ===== CHECKLIST ===== */
     .order-checklist {
@@ -796,12 +783,6 @@
   box-shadow:0 2px 12px rgba(0,0,0,0.2);">
   🔴 <strong>ออฟไลน์</strong> — ข้อมูลจะถูกส่งอัตโนมัติเมื่อออนไลน์
   <span id="offlineQueueCount" style="margin-left:6px; opacity:0.85;"></span>
-</div>
-
-<!-- Pull to refresh indicator -->
-<div id="pullRefreshIndicator">
-  <span id="pullRefreshIcon">↓</span>
-  <span id="pullRefreshText">ดึงเพื่อรีเฟรช</span>
 </div>
 
 <!-- แอนิเมชันพื้นหลัง -->
@@ -2622,9 +2603,6 @@ async function runSearch() {
 // ===== PULL TO REFRESH =====
 (function initPullToRefresh() {
   let startY = 0, pulling = false, triggered = false;
-  const indicator = document.getElementById('pullRefreshIndicator');
-  const icon = document.getElementById('pullRefreshIcon');
-  const text = document.getElementById('pullRefreshText');
   const THRESHOLD = 75;
 
   document.addEventListener('touchstart', e => {
@@ -2634,29 +2612,13 @@ async function runSearch() {
   document.addEventListener('touchmove', e => {
     if (!pulling) return;
     const dy = e.touches[0].clientY - startY;
-    if (dy > 20) {
-      indicator.classList.add('visible');
-      if (dy > THRESHOLD) {
-        icon.textContent = '↺'; text.textContent = 'ปล่อยเพื่อรีเฟรช';
-        triggered = true;
-      } else {
-        icon.textContent = '↓'; text.textContent = 'ดึงเพื่อรีเฟรช';
-        triggered = false;
-      }
-    }
+    triggered = dy > THRESHOLD;
   }, { passive: true });
 
   document.addEventListener('touchend', () => {
     if (!pulling) return;
     pulling = false;
-    if (triggered) {
-      icon.textContent = '⏳'; text.textContent = 'กำลังรีเฟรช...';
-      refreshAllCache().finally(() => {
-        setTimeout(() => indicator.classList.remove('visible'), 600);
-      });
-    } else {
-      indicator.classList.remove('visible');
-    }
+    if (triggered) refreshAllCache().catch(() => {});
   });
 })();
 (function() {
