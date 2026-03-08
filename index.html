@@ -541,6 +541,7 @@
     /* List items */
     html.dark-mode .list-group-item { background: linear-gradient(135deg,#2a1820,#241a2c) !important; color: #f0d6e0 !important; border-left-color: #5a2a40 !important; }
     html.dark-mode .list-group-item .btn-delete-item { color: #ff8fab !important; }
+    html.dark-mode .list-group-item[style*="e17055"] { background: linear-gradient(135deg,#2a1810,#241808) !important; }
 
     /* Action bar */
     html.dark-mode .action-bar-sticky { background: rgba(28,16,22,0.96) !important; border-top-color: #4a2535 !important; }
@@ -591,6 +592,7 @@
     html.dark-mode .swal2-popup    { background: #241420 !important; color: #f0d6e0 !important; }
     html.dark-mode .swal2-title,
     html.dark-mode .swal2-html-container { color: #f0d6e0 !important; }
+    html.dark-mode #confirmSheet { background: rgba(36,20,32,0.97) !important; border-top-color: #5a2a40 !important; }
 
     /* ===== PARCEL INFO BOX ===== */
     .parcel-box {
@@ -777,6 +779,17 @@
 </head>
 <body>
 
+<!-- Offline Banner -->
+<div id="offlineBanner" style="
+  display:none; position:fixed; top:var(--topbar-h); left:0; right:0; z-index:199;
+  background:linear-gradient(135deg,#991b1b,#7f1d1d);
+  color:white; text-align:center;
+  padding:8px 16px; font-size:0.8rem; font-family:'Mitr',sans-serif;
+  box-shadow:0 2px 12px rgba(0,0,0,0.2);">
+  🔴 <strong>ออฟไลน์</strong> — ข้อมูลจะถูกส่งอัตโนมัติเมื่อออนไลน์
+  <span id="offlineQueueCount" style="margin-left:6px; opacity:0.85;"></span>
+</div>
+
 <!-- Pull to refresh indicator -->
 <div id="pullRefreshIndicator">
   <span id="pullRefreshIcon">↓</span>
@@ -798,9 +811,9 @@
   <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0;">
     <div style="display:flex; align-items:center; gap:6px;">
       <button id="darkModeBtn" onclick="toggleDarkMode()" title="สลับธีม" style="background:none; border:none; cursor:pointer; font-size:1.1rem; padding:2px 4px; border-radius:8px; line-height:1;">🌙</button>
-      <span id="networkBadge" style="font-size:0.68rem; font-weight:600; padding:3px 9px; border-radius:20px; letter-spacing:0.2px; background:#d1fae5; color:#065f46; transition:all 0.3s ease;">🟢 ออนไลน์</span>
+      <span id="networkBadge" style="font-size:0.72rem; font-weight:600; padding:3px 9px; border-radius:20px; letter-spacing:0.2px; background:#d1fae5; color:#065f46; transition:all 0.3s ease;">🟢 ออนไลน์</span>
     </div>
-    <span id="syncTimeBadge" style="font-size:0.62rem; color:var(--text3);">—</span>
+    <span id="syncTimeBadge" style="font-size:0.72rem; color:var(--text3);">—</span>
   </div>
 </div>
 
@@ -897,7 +910,7 @@
           <div class="col-5 text-center">
             <div class="section-title" style="margin-top:0; margin-bottom:2px;">🛍 สินค้า</div>
             <div id="count" style="font-size:2.6rem; font-weight:700; color:var(--pink); line-height:1;">0</div>
-            <div style="font-size:0.65rem; color:var(--text3); margin-top:1px;">ชิ้น</div>
+            <div style="font-size:0.72rem; color:var(--text3); margin-top:1px;">ชิ้น</div>
           </div>
         </div>
       </div>
@@ -1022,7 +1035,7 @@
           <h6 class="fw-bold mb-0" style="color:var(--pink);">📋 แพ็กไปแล้ว (รอบนี้)</h6>
           <div style="display:flex; gap:6px; align-items:center;">
             <span id="sessionLogCount" style="font-size:0.72rem; color:var(--text3);">0 ใบ</span>
-            <button onclick="exportSessionCSV()" style="font-size:0.68rem; padding:2px 10px; border-radius:12px; border:1.5px solid var(--pink-light); background:white; color:var(--pink); font-family:'Mitr',sans-serif; cursor:pointer;">⬇ CSV</button>
+            <button onclick="exportSessionCSV()" style="font-size:0.72rem; padding:2px 10px; border-radius:12px; border:1.5px solid var(--pink-light); background:white; color:var(--pink); font-family:'Mitr',sans-serif; cursor:pointer;">⬇ CSV</button>
           </div>
         </div>
         <div id="sessionLogList">
@@ -1119,6 +1132,23 @@
     </div>
   </div>
 </div>
+
+<!-- Confirm Bottom Sheet -->
+<div id="confirmSheet" style="
+  position:fixed; bottom:0; left:0; right:0; z-index:1100;
+  background:var(--card-bg); border-radius:24px 24px 0 0;
+  padding:20px 20px 32px; box-shadow:0 -8px 32px rgba(0,0,0,0.15);
+  transform:translateY(100%); transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  backdrop-filter:blur(16px); border-top:1.5px solid var(--border2);">
+  <div style="width:40px; height:4px; background:var(--pink-light); border-radius:4px; margin:0 auto 16px;"></div>
+  <div style="font-size:1rem; font-weight:700; color:var(--text); margin-bottom:4px;">📦 ยืนยันจบงาน</div>
+  <div id="confirmSheetBody" style="font-size:0.85rem; color:var(--text2); margin-bottom:16px; line-height:1.7;"></div>
+  <div style="display:flex; gap:10px;">
+    <button onclick="closeConfirmSheet()" style="flex:1; padding:12px; border-radius:16px; border:2px solid var(--border2); background:transparent; color:var(--text2); font-family:'Mitr',sans-serif; font-size:0.9rem; cursor:pointer;">ยกเลิก</button>
+    <button id="confirmSheetOk" onclick="confirmFinish()" style="flex:2; padding:12px; border-radius:16px; border:none; background:linear-gradient(135deg,var(--pink),#e84393); color:white; font-family:'Mitr',sans-serif; font-size:0.9rem; font-weight:600; cursor:pointer; box-shadow:0 4px 14px rgba(255,143,171,0.4);">💾 บันทึกและจบงาน</button>
+  </div>
+</div>
+<div id="confirmSheetOverlay" onclick="closeConfirmSheet()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:1099; backdrop-filter:blur(2px);"></div>
 
 <!-- Undo Toast -->
 <div id="undoToast" style="
@@ -1219,14 +1249,28 @@ window.addEventListener('beforeunload', (e) => {
 // ============================================================
 function updateNetworkBadge() {
   const badge = document.getElementById('networkBadge');
+  const banner = document.getElementById('offlineBanner');
+  const pageContent = document.querySelector('.page-content');
   if (!badge) return;
   if (navigator.onLine) {
     badge.style.background = '#d1fae5'; badge.style.color = '#065f46';
     badge.textContent = '🟢 ออนไลน์';
+    if (banner) banner.style.display = 'none';
+    if (pageContent) pageContent.style.marginTop = '';
     retryFailedUploads();
   } else {
     badge.style.background = '#fee2e2'; badge.style.color = '#991b1b';
     badge.textContent = '🔴 ออฟไลน์';
+    if (banner) {
+      banner.style.display = 'block';
+      // แสดง queue count ถ้ามี
+      try {
+        const q = JSON.parse(localStorage.getItem('failedUploadQueue') || '[]');
+        const qc = document.getElementById('offlineQueueCount');
+        if (qc) qc.textContent = q.length > 0 ? `(มี ${q.length} รายการรอส่ง)` : '';
+      } catch(e) {}
+    }
+    if (pageContent) pageContent.style.marginTop = '36px';
   }
 }
 window.addEventListener('online',  updateNetworkBadge);
@@ -1841,7 +1885,59 @@ async function cancelWork() {
   }
 }
 
+let _pendingFinishManual = false;
+
+function showConfirmSheet(isManual) {
+  _pendingFinishManual = isManual;
+  const unknownCount = items.filter(c => !productMap[c]).length;
+  const unknownWarning = unknownCount > 0
+    ? `<div style="margin-top:8px; padding:8px 12px; border-radius:10px; background:rgba(225,112,85,0.12); color:#e17055; font-size:0.82rem;">⚠️ มีสินค้าไม่รู้จัก ${unknownCount} ชิ้น — ตรวจสอบก่อนบันทึก</div>`
+    : '';
+  document.getElementById('confirmSheetBody').innerHTML = `
+    <div>📬 <strong>พัสดุ:</strong> ${escHtml(currentP)}</div>
+    <div>🛍 <strong>สินค้า:</strong> ${items.length} ชิ้น</div>
+    ${currentRemark ? `<div>📝 <strong>หมายเหตุ:</strong> ${escHtml(currentRemark)}</div>` : ''}
+    ${unknownWarning}
+  `;
+  document.getElementById('confirmSheet').style.transform = 'translateY(0)';
+  document.getElementById('confirmSheetOverlay').style.display = 'block';
+}
+
+function closeConfirmSheet() {
+  document.getElementById('confirmSheet').style.transform = 'translateY(100%)';
+  document.getElementById('confirmSheetOverlay').style.display = 'none';
+}
+
+async function confirmFinish() {
+  closeConfirmSheet();
+  await _doFinishWork(_pendingFinishManual);
+}
+
 async function finishWork(isManual = false) {
+  const pId = currentP;
+  if (!pId) { if (isManual) speak("กรุณาสแกนรหัสพัสดุก่อนนะคะ"); return; }
+  if (isStrictValidationMode && !validateCurrentOrder()) {
+    let hasOver = false;
+    for (let sSku in scannedItemsMap) {
+      const req = expectedItemsArray.find(ex => ex.sku === sSku);
+      if (!req || scannedItemsMap[sSku] > req.qty) { hasOver = true; break; }
+    }
+    if (hasOver) {
+      Swal.fire('ยังปิดงานไม่ได้!', 'มีสินค้าผิดรายการ หรือ เกินจำนวน กรุณาตรวจสอบก่อน', 'error');
+      speak("มีสินค้าเกินจำนวนค่ะ กรุณาตรวจสอบ"); return;
+    }
+    if (!currentRemark) {
+      document.getElementById('remarkPanel').style.display = 'block';
+      document.getElementById('orderChecklistPanel').scrollIntoView({ behavior: 'smooth' });
+      speak("สินค้าไม่ครบค่ะ กรุณาเลือกเหตุผลก่อนจบงาน", false);
+      return;
+    }
+  }
+  // แสดง bottom sheet สรุปก่อนบันทึกจริง
+  showConfirmSheet(isManual);
+}
+
+async function _doFinishWork(isManual = false) {
   const pId = currentP;
   if (!pId) { if (isManual) speak("กรุณาสแกนรหัสพัสดุก่อนนะคะ"); return; }
   if (isStrictValidationMode && !validateCurrentOrder()) {
@@ -1881,7 +1977,7 @@ async function finishWork(isManual = false) {
       speak(summaryMsg + " สแกนพัสดุใบถัดไปได้เลยค่ะ", false);
       setStatus("⏳ กำลังเตรียมรับใบถัดไป...", "light");
     }
-    sessionParcels[snapshotParcelId] = count;
+    sessionParcels[snapshotParcelId] = { count, time: Date.now() };
     processBackgroundUpload(snapshotParcelId, snapshotItems, videoChunks, snapshotRemark);
   } catch (err) {
     console.error('[finishWork error]', err);
@@ -1978,9 +2074,16 @@ function renderList() {
   let ul = document.getElementById("itemList");
   ul.innerHTML = "";
   [...items].reverse().forEach((c, i) => {
+    const known = productMap[c];
     let li = document.createElement("li");
     li.className = "list-group-item d-flex justify-content-between align-items-center animate__animated animate__slideInLeft";
-    li.innerHTML = `<span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(productMap[c] || c)}</span><button class="btn-delete-item" onclick="removeItem(${items.length - 1 - i})" title="ลบ">✕</button>`;
+    if (!known) {
+      li.style.cssText += "; border-left-color: #e17055 !important; background: linear-gradient(135deg,#fff4f0,#fff8f0) !important;";
+    }
+    const label = known
+      ? escHtml(known)
+      : `<span style="color:#e17055; font-weight:600;">⚠️ ไม่รู้จัก</span> <span style="font-size:0.8em; color:#888;">${escHtml(c)}</span>`;
+    li.innerHTML = `<span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${label}</span><button class="btn-delete-item" onclick="removeItem(${items.length - 1 - i})" title="ลบ">✕</button>`;
     ul.appendChild(li);
   });
 }
@@ -2275,8 +2378,9 @@ function openTab(tab, btn) {
 }
 
 function refreshDash() {
-  const orders = Object.keys(sessionParcels).length;
-  const itemCount = Object.values(sessionParcels).reduce((a, b) => a + b, 0);
+  const entries = Object.entries(sessionParcels);
+  const orders = entries.length;
+  const itemCount = entries.reduce((a, [, v]) => a + (typeof v === 'object' ? v.count : v), 0);
   document.getElementById("d-box").innerText  = orders;
   document.getElementById("d-item").innerText = itemCount;
 
@@ -2289,14 +2393,18 @@ function refreshDash() {
     logList.innerHTML = '<div class="text-center text-muted small py-2" style="font-size:0.8rem;">ยังไม่มีรายการในรอบนี้ 🌸</div>';
     return;
   }
-  logList.innerHTML = Object.entries(sessionParcels)
-    .map(([pid, cnt]) => `
-      <div style="display:flex; justify-content:space-between; align-items:center;
-        padding:6px 8px; border-bottom:1px solid #ffe4ec; font-size:0.78rem;">
-        <span style="color:var(--text); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%;">${escHtml(pid)}</span>
-        <span style="color:var(--pink); font-weight:600; flex-shrink:0;">${cnt} ชิ้น</span>
-      </div>`)
-    .join('');
+  logList.innerHTML = entries.map(([pid, v]) => {
+    const cnt  = typeof v === 'object' ? v.count : v;
+    const ts   = typeof v === 'object' && v.time
+      ? new Date(v.time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+      : '';
+    return `<div style="display:flex; justify-content:space-between; align-items:center;
+      padding:7px 8px; border-bottom:1px solid #ffe4ec; font-size:0.78rem; gap:8px;">
+      <span style="color:var(--text2); font-size:0.7rem; flex-shrink:0;">${ts}</span>
+      <span style="color:var(--text); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${escHtml(pid)}</span>
+      <span style="color:var(--pink); font-weight:600; flex-shrink:0;">${cnt} ชิ้น</span>
+    </div>`;
+  }).join('');
 }
 
 function localDateStr(d) {
@@ -2350,7 +2458,7 @@ function renderReport(data, start, end) {
   const fmt = d => new Date(d).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'});
   document.getElementById('dashPeriod').innerText = start === end ? fmt(start) : `${fmt(start)} – ${fmt(end)}`;
   document.getElementById('d-box').innerText  = data.totalOrders  ?? Object.keys(sessionParcels).length;
-  document.getElementById('d-item').innerText = data.totalItems   ?? Object.values(sessionParcels).reduce((a,b)=>a+b,0);
+  document.getElementById('d-item').innerText = data.totalItems   ?? Object.entries(sessionParcels).reduce((a,[,v])=>a+(typeof v==='object'?v.count:v),0);
   
   const container = document.getElementById('dashProductTable');
   const products  = data.allProducts || [];
@@ -2402,9 +2510,14 @@ function exportSessionCSV() {
   if (entries.length === 0) {
     Swal.fire('ไม่มีข้อมูล', 'ยังไม่มีรายการในรอบนี้ค่ะ', 'info'); return;
   }
-  const today = new Date().toLocaleDateString('th-TH');
-  const rows = [['รหัสพัสดุ', 'จำนวนสินค้า (ชิ้น)', 'วันที่']];
-  entries.forEach(([pid, cnt]) => rows.push([pid, cnt, today]));
+  const rows = [['รหัสพัสดุ', 'จำนวนสินค้า (ชิ้น)', 'เวลา']];
+  entries.forEach(([pid, v]) => {
+    const cnt  = typeof v === 'object' ? v.count : v;
+    const ts   = typeof v === 'object' && v.time
+      ? new Date(v.time).toLocaleString('th-TH')
+      : new Date().toLocaleDateString('th-TH');
+    rows.push([pid, cnt, ts]);
+  });
   const csv = rows.map(r => r.join(',')).join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
