@@ -675,6 +675,16 @@
           <div class="text-center text-muted small py-3">กดค้นหาเพื่อดูข้อมูลค่ะ 🐱</div>
         </div>
       </div>
+      <!-- Session Log -->
+      <div class="dash-table-card mt-3">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h6 class="fw-bold mb-0" style="color:var(--pink);">📋 แพ็กไปแล้ว (รอบนี้)</h6>
+          <span id="sessionLogCount" style="font-size:0.72rem; color:var(--text3);">0 ใบ</span>
+        </div>
+        <div id="sessionLogList">
+          <div class="text-center text-muted small py-2" style="font-size:0.8rem;">ยังไม่มีรายการในรอบนี้ 🌸</div>
+        </div>
+      </div>
     </div>
     <!-- Reset button -->
     <div class="text-center mt-3">
@@ -871,6 +881,20 @@ window.addEventListener('online',  updateNetworkBadge);
 window.addEventListener('offline', updateNetworkBadge);
 updateNetworkBadge();
 
+// ล้าง failedUploadQueue ที่เก่าเกิน 7 วัน อัตโนมัติตอนเปิดแอป
+(function purgeOldFailQueue() {
+  try {
+    const FKEY = 'failedUploadQueue';
+    const q = JSON.parse(localStorage.getItem(FKEY) || '[]');
+    const cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    const fresh = q.filter(job => job.ts && job.ts > cutoff);
+    if (fresh.length !== q.length) {
+      localStorage.setItem(FKEY, JSON.stringify(fresh));
+      console.log(`[FailQueue] ลบรายการเก่า ${q.length - fresh.length} รายการ`);
+    }
+  } catch(e) {}
+})();
+
 // ============================================================
 // 4. LAST SYNC TIME
 // ============================================================
@@ -995,6 +1019,16 @@ function startInactivityWatch() {
 function clearInactivityWatch() {
   if (inactivityTimer) { clearTimeout(inactivityTimer); inactivityTimer = null; }
   if (inactivityRepeatTimer) { clearInterval(inactivityRepeatTimer); inactivityRepeatTimer = null; }
+}
+
+// --- XSS Protection ---
+function escHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // --- API Helper ---
@@ -1169,7 +1203,10 @@ function setupScanUI() {
   document.getElementById("startBtn").style.display = "none";
   document.getElementById("action-buttons").style.display = "block";
   document.getElementById("refreshCacheBtn").style.display = "inline-block";
-  requestWakeLock(); // ป้องกันหน้าจอดับขณะทำงาน
+  // หยุด paw animation ระหว่างสแกน ลด CPU/battery
+  const pawBg = document.getElementById('pawBg');
+  if (pawBg) pawBg.style.display = 'none';
+  requestWakeLock();
   speak("ระบบพร้อมแล้วค่ะ เริ่มสแกนพัสดุได้เลย");
   startScan();
 }
@@ -1239,6 +1276,11 @@ function spawnSparkle(x, y) {
   setTimeout(() => s.remove(), 1000);
 }
 
+// Vibration helper
+function vibrate(pattern) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
 async function processFinalScan(text) {
   const upperText = text.trim().toUpperCase();
   const isFlash = upperText.startsWith("TH") && (upperText.length === 15 || upperText.length === 14);
@@ -1257,16 +1299,20 @@ async function processFinalScan(text) {
       let currentScannedQty = scannedItemsMap[upperText] || 0;
       const productName = productMap[upperText] || upperText;
       if (!reqItem) {
+        vibrate([100, 50, 100, 50, 100]); // สินค้าไม่อยู่ในรายการ
         speak(productName, true);
         setTimeout(() => speak("ไม่มีสินค้านี้ในรายการนะคะ", false), 800);
       } else if (currentScannedQty >= reqItem.qty) {
+        vibrate([100, 50, 100, 50, 100]); // สินค้าเกิน
         speak(productName, true);
         setTimeout(() => speak("สินค้าเกินจำนวนค่ะ", false), 800);
       } else {
+        vibrate(30); // สแกนปกติ
         speak(productName, true);
       }
       scannedItemsMap[upperText] = currentScannedQty + 1;
     } else {
+      vibrate(30);
       speak(productMap[upperText] || upperText, true);
     }
     lastScanTime = Date.now();
@@ -1378,6 +1424,9 @@ async function cancelWork() {
     await resetAppForNext();
     isFinishing = false;
     setStatus("✖ ยกเลิกงานเรียบร้อย", "secondary");
+  } else {
+    // กด "กลับไปแพ็กต่อ" — ล้าง chunks เก่าที่อาจสะสม ป้องกัน memory leak
+    recordedChunks = recordedChunks.filter(c => c && c.size > 0);
   }
 }
 
@@ -1402,6 +1451,8 @@ async function finishWork(isManual = false) {
     }
   }
   isFinishing = true;
+  const saveBtn = document.getElementById('saveBtn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.6'; }
   clearInactivityWatch(); // หยุดแจ้งเตือนเมื่อจบงาน
   const snapshotItems = [...items];
   const snapshotParcelId = pId;
@@ -1429,6 +1480,8 @@ async function finishWork(isManual = false) {
     setTimeout(() => {
       isFinishing = false;
       lastScanTime = Date.now();
+      const saveBtn = document.getElementById('saveBtn');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = ''; }
       if (!isManual) setStatus("✔ พร้อมรับพัสดุใบถัดไป", "success");
     }, 1500);
   }
@@ -1477,7 +1530,9 @@ async function resetAppForNext() {
 
 async function closeAppCompletely() {
   if (scanner) { await scanner.clear(); scanner = null; }
-  releaseWakeLock(); // คืน wake lock เมื่อจบงาน
+  releaseWakeLock();
+  const pawBg = document.getElementById('pawBg');
+  if (pawBg) pawBg.style.display = '';
   document.getElementById("app-header").style.display = "flex";
   document.getElementById("app-tabs").style.display = "flex";
   currentP = ""; items = []; isEditingId = false;
@@ -1638,6 +1693,7 @@ function updateChecklistUI() {
   if (isAllMatched && !hasOverScan) {
     alertBox.className = "alert alert-success mt-2 mb-0 py-2";
     alertBox.innerHTML = "<strong>สมบูรณ์!</strong> สินค้าครบถ้วน";
+    vibrate([80, 60, 80]); // สองครั้ง = ครบแล้ว
     speak("สินค้าครบถ้วนแล้วค่ะ", false);
   } else if (hasOverScan) {
     alertBox.className = "alert alert-danger mt-2 mb-0 py-2";
@@ -1670,10 +1726,12 @@ async function processFileUpload() {
   const fileInput = document.getElementById('fileInput');
   const marketplace = document.getElementById('marketplaceSelect').value;
   if (!fileInput.files.length) { Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกไฟล์ก่อน', 'warning'); return; }
-  Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
   const file = fileInput.files[0];
   const map = colMappings[marketplace];
-  
+
+  // --- อ่านไฟล์และ preview ก่อนส่ง ---
+  Swal.fire({ title: 'กำลังอ่านไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  let extractData = [];
   try {
     let rows = [];
     if (map.isCsv) {
@@ -1685,15 +1743,12 @@ async function processFileUpload() {
       const workbook = XLSX.read(new Uint8Array(buffer), { type: 'array' });
       rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, raw: false });
     }
-    
-    let extractData = [];
+
     const startRow = map.headerRows || 1;
-    
     if (marketplace === 'lazada') {
       const trackingMap = {};
       for (let i = startRow; i < rows.length; i++) {
-        const row = rows[i];
-        if (!row) continue;
+        const row = rows[i]; if (!row) continue;
         const tracking = String(row[map.tracking] || '').trim().toUpperCase();
         const sku      = String(row[map.sku]      || '').trim().toUpperCase();
         if (!tracking || !sku || tracking === 'UNDEFINED' || sku === 'UNDEFINED') continue;
@@ -1706,8 +1761,7 @@ async function processFileUpload() {
       }
     } else {
       for (let i = startRow; i < rows.length; i++) {
-        const row = rows[i];
-        if (!row) continue;
+        const row = rows[i]; if (!row) continue;
         const tracking = String(row[map.tracking] || '').trim().toUpperCase();
         const sku      = String(row[map.sku]      || '').trim().toUpperCase();
         const qty      = parseInt(row[map.qty]) || 1;
@@ -1716,27 +1770,54 @@ async function processFileUpload() {
         extractData.push({ marketplace, tracking, sku, qty });
       }
     }
-    
-    if (extractData.length === 0) {
-      Swal.fire('แจ้งเตือน', 'ไม่พบข้อมูล\nกรุณาตรวจสอบว่าเลือก Marketplace ให้ตรงกับไฟล์', 'warning');
-      return;
-    }
-    
-    // ส่งข้อมูลไปบันทึกที่ Google Sheet ตามปกติ
-    const response = await callGAS("saveMarketplaceData", { data: extractData, fileName: file.name, marketplace });
-    
-    // === ลบส่วน Local Storage ที่ทำให้คอมแฮงค์ออกไปแล้ว ตรงนี้จะเป็นแค่ส่งข้อมูลขึ้น Sheet ===
+    Swal.close();
+  } catch (err) {
+    Swal.fire('ข้อผิดพลาด', 'อ่านไฟล์ไม่ได้: ' + err.message, 'error');
+    return;
+  }
 
+  if (extractData.length === 0) {
+    Swal.fire('แจ้งเตือน', 'ไม่พบข้อมูล\nกรุณาตรวจสอบว่าเลือก Marketplace ให้ตรงกับไฟล์', 'warning');
+    return;
+  }
+
+  // --- Preview ก่อนยืนยัน ---
+  const uniqueTracking = new Set(extractData.map(d => d.tracking)).size;
+  const confirm = await Swal.fire({
+    title: '📋 ตรวจสอบข้อมูลก่อนอัปโหลด',
+    html: `
+      <div style="text-align:left; font-size:0.9rem; color:#5a3e4b; line-height:1.8;">
+        <div>📦 พัสดุ: <strong>${uniqueTracking} ใบ</strong></div>
+        <div>🛍️ รายการสินค้า: <strong>${extractData.length} รายการ</strong></div>
+        <div>🏪 Marketplace: <strong>${escHtml(marketplace)}</strong></div>
+        <div>📄 ไฟล์: <strong>${escHtml(file.name)}</strong></div>
+      </div>`,
+    icon: 'info',
+    showCancelButton: true,
+    confirmButtonText: '📤 อัปโหลดเลย',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#ff8fab',
+    cancelButtonColor: '#b2bec3',
+    background: '#fff0f3',
+    customClass: { popup: 'swal-popup', title: 'swal-ttl', confirmButton: 'swal-btn', cancelButton: 'swal-btn' },
+    reverseButtons: true,
+  });
+  if (!confirm.isConfirmed) return;
+
+  // --- ส่งขึ้น GAS ---
+  Swal.fire({ title: 'กำลังอัปโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  try {
+    const response = await callGAS("saveMarketplaceData", { data: extractData, fileName: file.name, marketplace });
     if (response && response.success) {
       const dupMsg = response.duplicateSkipped > 0 ? `\n(ข้ามซ้ำ ${response.duplicateSkipped} รายการ)` : '';
       Swal.fire('สำเร็จ', `อัปโหลดสำเร็จ ${response.count} รายการ${dupMsg}`, 'success');
       bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
       document.getElementById('fileInput').value = "";
     } else {
-      Swal.fire('ข้อผิดพลาด', 'บันทึกไม่สำเร็จ: ' + (response?.error || ''), 'error');
+      Swal.fire('ข้อผิดพลาด', 'บันทึกไม่สำเร็จ: ' + escHtml(response?.error || ''), 'error');
     }
   } catch (err) {
-    Swal.fire('ข้อผิดพลาด', 'อ่านไฟล์ไม่ได้: ' + err.message, 'error');
+    Swal.fire('ข้อผิดพลาด', err.message, 'error');
   }
 }
 
@@ -1755,9 +1836,27 @@ function openTab(tab, btn) {
 
 function refreshDash() {
   const orders = Object.keys(sessionParcels).length;
-  const items  = Object.values(sessionParcels).reduce((a, b) => a + b, 0);
+  const itemCount = Object.values(sessionParcels).reduce((a, b) => a + b, 0);
   document.getElementById("d-box").innerText  = orders;
-  document.getElementById("d-item").innerText = items;
+  document.getElementById("d-item").innerText = itemCount;
+
+  // Session log
+  const logList = document.getElementById('sessionLogList');
+  const logCount = document.getElementById('sessionLogCount');
+  if (!logList || !logCount) return;
+  logCount.textContent = `${orders} ใบ`;
+  if (orders === 0) {
+    logList.innerHTML = '<div class="text-center text-muted small py-2" style="font-size:0.8rem;">ยังไม่มีรายการในรอบนี้ 🌸</div>';
+    return;
+  }
+  logList.innerHTML = Object.entries(sessionParcels)
+    .map(([pid, cnt]) => `
+      <div style="display:flex; justify-content:space-between; align-items:center;
+        padding:6px 8px; border-bottom:1px solid #ffe4ec; font-size:0.78rem;">
+        <span style="color:var(--text); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%;">${escHtml(pid)}</span>
+        <span style="color:var(--pink); font-weight:600; flex-shrink:0;">${cnt} ชิ้น</span>
+      </div>`)
+    .join('');
 }
 
 function localDateStr(d) {
@@ -1822,11 +1921,11 @@ function renderReport(data, start, end) {
       <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
         <div class="dash-rank">${i+1}</div>
         <div style="overflow:hidden;">
-          <div style="font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</div>
-          <div style="font-size:0.72rem; color:#b0889a;">${item.sku || ''}</div>
+          <div style="font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escHtml(item.name)}</div>
+          <div style="font-size:0.72rem; color:#b0889a;">${escHtml(item.sku || '')}</div>
         </div>
       </div>
-      <div class="dash-count">${item.count}<span style="font-size:0.7rem; font-weight:400; color:#c49aaa;"> ชิ้น</span></div>
+      <div class="dash-count">${escHtml(item.count)}<span style="font-size:0.7rem; font-weight:400; color:#c49aaa;"> ชิ้น</span></div>
     </div>
   `).join('');
 }
@@ -1883,11 +1982,15 @@ async function runSearch() {
     let head = "<tr><th>วันที่</th><th>รหัสพัสดุ</th><th>วิดีโอ</th>";
     for (let i = 3; i < max; i++) head += `<th>สินค้า ${i - 2}</th>`;
     th.innerHTML = head + "</tr>";
-    res.forEach(row => {
-      let tr = "<tr>";
-      row.forEach(cell => { tr += `<td>${String(cell).includes("http") ? `<a href="${cell}" target="_blank" class="btn btn-sm btn-outline-primary">ดูคลิป</a>` : cell}</td>`; });
-      tb.innerHTML += tr + "</tr>";
-    });
+    // สร้าง string ทั้งหมดก่อน set ครั้งเดียว (ป้องกัน XSS + เร็วกว่า += loop)
+    const rows = res.map(row => {
+      const cells = row.map(cell => {
+        const s = String(cell ?? '');
+        return `<td>${s.startsWith('http') ? `<a href="${escHtml(s)}" target="_blank" class="btn btn-sm btn-outline-primary">ดูคลิป</a>` : escHtml(s)}</td>`;
+      }).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+    tb.innerHTML = rows;
     const rawItems = res[0].slice(3).filter(i => i && !String(i).includes("http"));
     if (rawItems.length > 0) speak(`จำนวนสินค้า ${rawItems.length} รายการค่ะ`);
     else speak("พบข้อมูลแต่ไม่มีรายการสินค้าค่ะ");
