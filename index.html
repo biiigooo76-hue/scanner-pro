@@ -13,6 +13,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- บังคับ default = light mode ทุกครั้งที่โหลดไฟล์ใหม่ -->
+  <script>
+    try { localStorage.setItem('darkMode', '0'); } catch(e) {}
+  </script>
   
   <style>
     :root {
@@ -305,39 +309,7 @@
     }
 
     /* ===== DARK MODE ===== */
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --pink-pale:  #1e1218;
-        --card-bg:    rgba(40,28,36,0.92);
-        --surface:    #2a1e26;
-        --surface2:   #321c28;
-        --text:       #f0d6e0;
-        --text2:      #c9a8b8;
-        --text3:      #886070;
-        --border:     rgba(120,60,80,0.4);
-        --border2:    #6b3045;
-      }
-      body { background: #1a1018; }
-      body::before {
-        background:
-          radial-gradient(ellipse 80% 60% at 10% 10%, #2d1520 0%, transparent 60%),
-          radial-gradient(ellipse 60% 50% at 90% 90%, #1e1030 0%, transparent 60%),
-          radial-gradient(ellipse 50% 40% at 50% 50%, #2a1a10 0%, transparent 70%);
-      }
-      .card { background: rgba(40,28,36,0.9); border-color: rgba(120,60,80,0.35); }
-      #app-header { background: rgba(30,18,24,0.88); border-color: #4a2535; }
-      #app-tabs { background: rgba(36,24,30,0.9); border-color: rgba(120,60,80,0.4); }
-      .list-group-item { background: linear-gradient(135deg, #2a1822, #261a2c); }
-      .parcel-box { background: linear-gradient(135deg, rgba(50,28,40,0.7), rgba(40,24,50,0.7)); }
-      .status-bar-full { background: #251820; color: #9a7888; border-left-color: #4a2535; }
-      .action-bar-sticky { background: rgba(30,18,24,0.94); border-top-color: #4a2535; }
-      .onboarding-tip { background: linear-gradient(135deg,#241a08,#1e1a00); border-color: #6b4e00; }
-      .dash-table-card { background: rgba(40,28,36,0.8); }
-      .stat-card { background: rgba(40,28,36,0.8); }
-      input, select, .form-control { background: #2a1e26 !important; color: var(--text) !important; border-color: #4a2535 !important; }
-    }
-
-    /* ===== STATUS BAR ===== */
+    /* dark mode controlled by .dark-mode class only (ไม่ใช้ prefers-color-scheme) */
 
     /* ===== STATUS BAR ===== */
     .status-bar-full.bg-light    { background:#f8f9fa !important; color:#6c757d; border-left-color:#dee2e6; }
@@ -348,12 +320,10 @@
     .status-bar-full.bg-info     { background:#e0f2fe !important; color:#0369a1; border-left-color:#0ea5e9; }
     .status-bar-full.bg-secondary{ background:#f1f5f9 !important; color:#475569; border-left-color:#94a3b8; }
     .status-bar-full.text-muted  { color:#6c757d !important; }
-    @media (prefers-color-scheme: dark) {
-      .status-bar-full.bg-success  { background:rgba(6,78,59,0.4) !important; color:#6ee7b7; }
-      .status-bar-full.bg-danger   { background:rgba(127,29,29,0.4) !important; color:#fca5a5; }
-      .status-bar-full.bg-primary  { background:rgba(30,58,138,0.4) !important; color:#93c5fd; }
-      .status-bar-full.bg-warning  { background:rgba(120,53,15,0.4) !important; color:#fcd34d; }
-    }
+    html.dark-mode .status-bar-full.bg-success  { background:rgba(6,78,59,0.4) !important; color:#6ee7b7 !important; }
+    html.dark-mode .status-bar-full.bg-danger   { background:rgba(127,29,29,0.4) !important; color:#fca5a5 !important; }
+    html.dark-mode .status-bar-full.bg-primary  { background:rgba(30,58,138,0.4) !important; color:#93c5fd !important; }
+    html.dark-mode .status-bar-full.bg-warning  { background:rgba(120,53,15,0.4) !important; color:#fcd34d !important; }
 
     /* ===== REC UI ===== */
     #rec-ui {
@@ -452,35 +422,115 @@
     }
     .remark-btn:hover, .remark-btn.selected { background: #ffd166; border-color: #ffd166; color: #5a3e00; }
 
-    /* ===== CLASS-BASED DARK MODE (override media query) ===== */
-    body.dark-mode {
-      --pink-pale:  #1e1218;
-      --card-bg:    rgba(40,28,36,0.92);
-      --surface:    #2a1e26;
-      --surface2:   #321c28;
-      --text:       #f0d6e0;
-      --text2:      #c9a8b8;
-      --text3:      #886070;
-      --border:     rgba(120,60,80,0.4);
-      --border2:    #6b3045;
+    /* ===== CLASS-BASED DARK MODE ===== */
+    html.dark-mode {
+      --pink:        #ff8fab;
+      --pink-light:  #6b3050;
+      --pink-pale:   #1a1018;
+      --text:        #f0d6e0;
+      --text2:       #c9a8b8;
+      --text3:       #886878;
+      --card-bg:     rgba(38,26,34,0.95);
+      --surface:     #2a1e26;
+      --surface2:    #321c28;
+      --border:      rgba(120,60,90,0.45);
+      --border2:     #5a2a40;
+      --brown:       #e8c0cc;
       background: #1a1018;
+      color: #f0d6e0;
     }
-    body.dark-mode::before {
+    html.dark-mode::before {
       background:
         radial-gradient(ellipse 80% 60% at 10% 10%, #2d1520 0%, transparent 60%),
         radial-gradient(ellipse 60% 50% at 90% 90%, #1e1030 0%, transparent 60%),
         radial-gradient(ellipse 50% 40% at 50% 50%, #2a1a10 0%, transparent 70%);
     }
-    body.dark-mode .card { background: rgba(40,28,36,0.9) !important; border-color: rgba(120,60,80,0.35) !important; }
-    body.dark-mode #app-header { background: rgba(30,18,24,0.88) !important; border-color: #4a2535 !important; }
-    body.dark-mode #app-tabs { background: rgba(36,24,30,0.9) !important; border-color: rgba(120,60,80,0.4) !important; }
-    body.dark-mode .list-group-item { background: linear-gradient(135deg, #2a1822, #261a2c) !important; }
-    body.dark-mode .parcel-box { background: linear-gradient(135deg, rgba(50,28,40,0.7), rgba(40,24,50,0.7)) !important; }
-    body.dark-mode .status-bar-full { background: #251820 !important; color: #9a7888 !important; border-left-color: #4a2535 !important; }
-    body.dark-mode .action-bar-sticky { background: rgba(30,18,24,0.94) !important; border-top-color: #4a2535 !important; }
-    body.dark-mode input, body.dark-mode select, body.dark-mode .form-control { background: #2a1e26 !important; color: var(--text) !important; border-color: #4a2535 !important; }
-    body.dark-mode .dash-table-card, body.dark-mode .stat-card { background: rgba(40,28,36,0.8) !important; }
-    body.dark-mode .onboarding-tip { background: linear-gradient(135deg,#241a08,#1e1a00) !important; border-color: #6b4e00 !important; }
+
+    /* Layout */
+    html.dark-mode #app-header  { background: rgba(28,16,22,0.92) !important; border-color: #4a2535 !important; }
+    html.dark-mode #app-tabs    { background: rgba(32,20,26,0.94) !important; border-color: rgba(100,50,70,0.5) !important; }
+    html.dark-mode .tab-btn     { color: #886878 !important; }
+    html.dark-mode .tab-btn.active { background: linear-gradient(135deg,#3d1a2e,#2a1040) !important; color: #f0d6e0 !important; }
+
+    /* Cards & surfaces */
+    html.dark-mode .card        { background: rgba(38,26,34,0.95) !important; border-color: rgba(100,50,70,0.4) !important; }
+    html.dark-mode .parcel-box  { background: linear-gradient(135deg,rgba(50,28,40,0.8),rgba(38,22,48,0.8)) !important; border-color: #5a2a40 !important; }
+    html.dark-mode .order-checklist { background: linear-gradient(135deg,#241428,#1e1824) !important; border-color: #5a2a40 !important; }
+    html.dark-mode .dash-table-card { background: rgba(38,26,34,0.9) !important; border-color: rgba(100,50,70,0.3) !important; }
+    html.dark-mode .stat-card   { background: rgba(38,26,34,0.9) !important; border-color: rgba(100,50,70,0.3) !important; }
+    html.dark-mode .onboarding-tip { background: linear-gradient(135deg,#241a08,#1e180a) !important; border-color: #6b4e10 !important; color: #e8d090 !important; }
+
+    /* Text */
+    html.dark-mode .section-title { color: #886878 !important; }
+    html.dark-mode .form-text    { color: #886878 !important; }
+    html.dark-mode .text-muted   { color: #886878 !important; }
+    html.dark-mode h6            { color: #f0d6e0 !important; }
+    html.dark-mode .small        { color: #c9a8b8; }
+    html.dark-mode .topbar-title { color: #f0d6e0 !important; }
+    html.dark-mode .topbar-sub   { color: #886878 !important; }
+
+    /* Status bar */
+    html.dark-mode .status-bar-full                  { background: #251820 !important; color: #9a7888 !important; border-left-color: #5a2a40 !important; }
+    html.dark-mode .status-bar-full.bg-success        { background: rgba(6,78,59,0.35) !important;   color: #6ee7b7 !important; border-left-color: #2d9e6b !important; }
+    html.dark-mode .status-bar-full.bg-danger         { background: rgba(127,29,29,0.35) !important;  color: #fca5a5 !important; border-left-color: #d63031 !important; }
+    html.dark-mode .status-bar-full.bg-primary        { background: rgba(30,58,138,0.35) !important;  color: #93c5fd !important; border-left-color: #3b82f6 !important; }
+    html.dark-mode .status-bar-full.bg-warning        { background: rgba(120,53,15,0.35) !important;  color: #fcd34d !important; border-left-color: #f59e0b !important; }
+    html.dark-mode .status-bar-full.bg-info           { background: rgba(3,105,161,0.35) !important;  color: #7dd3fc !important; border-left-color: #0ea5e9 !important; }
+    html.dark-mode .status-bar-full.bg-secondary      { background: rgba(51,65,85,0.5) !important;    color: #cbd5e1 !important; border-left-color: #64748b !important; }
+
+    /* List items */
+    html.dark-mode .list-group-item { background: linear-gradient(135deg,#2a1820,#241a2c) !important; color: #f0d6e0 !important; border-left-color: #5a2a40 !important; }
+    html.dark-mode .list-group-item .btn-delete-item { color: #ff8fab !important; }
+
+    /* Action bar */
+    html.dark-mode .action-bar-sticky { background: rgba(28,16,22,0.96) !important; border-top-color: #4a2535 !important; }
+    html.dark-mode #refreshCacheBtn   { background: #2a1e26 !important; color: var(--pink) !important; border-color: #5a2a40 !important; }
+
+    /* Forms */
+    html.dark-mode input:not([type=file]),
+    html.dark-mode select,
+    html.dark-mode .form-control:not([type=file]) { background: #2a1e26 !important; color: #f0d6e0 !important; border-color: #5a2a40 !important; }
+    html.dark-mode input[type=file].form-control  { background: #2a1e26 !important; color: #c9a8b8 !important; border-color: #5a2a40 !important; }
+    html.dark-mode .input-group .btn-primary  { background: #3d1a2e !important; border-color: #5a2a40 !important; }
+    html.dark-mode .input-group .btn-success  { background: #1a3a2a !important; border-color: #2d9e6b !important; }
+    html.dark-mode .table          { color: #f0d6e0 !important; }
+    html.dark-mode .table-light    { background: #2a1e26 !important; color: #c9a8b8 !important; }
+    html.dark-mode .table-hover tbody tr:hover { background: rgba(255,143,171,0.06) !important; }
+    html.dark-mode .dash-date-input { background: #2a1e26 !important; color: #f0d6e0 !important; border-color: #5a2a40 !important; }
+
+    /* Dashboard */
+    html.dark-mode .dash-presets   { background: rgba(38,26,34,0.8) !important; border-color: #5a2a40 !important; }
+    html.dark-mode .preset-btn     { color: #c9a8b8 !important; }
+    html.dark-mode .preset-btn.active { background: linear-gradient(135deg,#5a2a40,#3d1a5a) !important; color: white !important; }
+    html.dark-mode .stat-num       { color: #ff8fab !important; }
+    html.dark-mode .dash-period-badge { background: linear-gradient(135deg,#3d1a2e,#2a1040) !important; color: #f0d6e0 !important; }
+
+    /* Checklist */
+    html.dark-mode .checklist-item          { border-bottom-color: #3d1a2e !important; color: #c9a8b8 !important; }
+    html.dark-mode .checklist-item.matched  { background: rgba(45,158,107,0.15) !important; color: #6ee7b7 !important; }
+    html.dark-mode .checklist-item.over     { background: rgba(214,48,49,0.15) !important; color: #fca5a5 !important; }
+
+    /* Remark panel */
+    html.dark-mode .remark-panel  { background: linear-gradient(135deg,#241a08,#1e180a) !important; border-color: #6b4e10 !important; }
+    html.dark-mode .remark-btn    { background: #2a1e10 !important; border-color: #6b4e10 !important; color: #e8d090 !important; }
+    html.dark-mode .remark-btn:hover, html.dark-mode .remark-btn.selected { background: #6b4e10 !important; color: #fff8e0 !important; }
+
+    /* Modal — อัปโหลด */
+    html.dark-mode .modal-content  { background: #241420 !important; border-color: #5a2a40 !important; }
+    html.dark-mode .modal-body     { background: #241420 !important; color: #f0d6e0 !important; }
+    html.dark-mode .modal-footer   { background: #1e1018 !important; border-top-color: #4a2535 !important; }
+    html.dark-mode .mp-option      { background: #2a1820 !important; border-color: #4a2535 !important; color: #f0d6e0 !important; }
+    html.dark-mode .mp-option.selected { background: #3d1a2e !important; border-color: var(--pink) !important; box-shadow: 0 0 0 2px rgba(255,143,171,0.25) !important; }
+    html.dark-mode .mp-name        { color: #f0d6e0 !important; }
+    html.dark-mode .mp-desc        { color: #886878 !important; }
+    html.dark-mode .mp-guide-btn   { background: #2a1820 !important; color: var(--pink) !important; border-color: #5a2a40 !important; }
+    html.dark-mode .mp-guide-btn:hover { background: var(--pink) !important; color: white !important; }
+    html.dark-mode .modal-footer .btn { color: #c9a8b8 !important; border-color: #4a2535 !important; background: #2a1820 !important; }
+
+    /* Swal overrides */
+    html.dark-mode .swal2-popup    { background: #241420 !important; color: #f0d6e0 !important; }
+    html.dark-mode .swal2-title,
+    html.dark-mode .swal2-html-container { color: #f0d6e0 !important; }
 
     /* ===== PARCEL INFO BOX ===== */
     .parcel-box {
@@ -2364,12 +2414,21 @@ function dismissOnboarding() {
 // ===== DARK MODE TOGGLE =====
 (function initDarkMode() {
   try {
+    document.documentElement.classList.remove('dark-mode-pending');
     const saved = localStorage.getItem('darkMode');
-    if (saved === '1') { document.body.classList.add('dark-mode'); document.getElementById('darkModeBtn').textContent = '☀️'; }
-  } catch(e) {}
+    if (saved === '1') {
+      document.documentElement.classList.add('dark-mode');
+      const btn = document.getElementById('darkModeBtn');
+      if (btn) btn.textContent = '☀️';
+    } else {
+      // default = light เสมอ ล้าง stale value ทุกกรณี
+      document.documentElement.classList.remove('dark-mode');
+      localStorage.setItem('darkMode', '0');
+    }
+  } catch(e) { document.documentElement.classList.remove('dark-mode'); }
 })();
 function toggleDarkMode() {
-  const isDark = document.body.classList.toggle('dark-mode');
+  const isDark = document.documentElement.classList.toggle('dark-mode');
   document.getElementById('darkModeBtn').textContent = isDark ? '☀️' : '🌙';
   try { localStorage.setItem('darkMode', isDark ? '1' : '0'); } catch(e) {}
 }
