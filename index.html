@@ -247,12 +247,7 @@
 
     /* ===== STICKY ACTION BAR ===== */
     .action-bar-sticky {
-      position: sticky;
-      bottom: calc(var(--nav-h) + 22px);
-      z-index: 50;
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      position: static;
       padding: 10px 0 6px;
       margin-top: 12px;
       border-top: 1px solid var(--pink-light);
@@ -372,19 +367,21 @@
     #reader__status_span { display: none !important; }
     #reader__dashboard_section_swaplink { display: none !important; }
     #reader__scan_region { border-radius: 16px; overflow: hidden; }
-    #reader__dashboard { padding: 6px 0 0 !important; background: transparent !important; border: none !important; }
+    #reader__dashboard { padding: 2px 0 0 !important; background: transparent !important; border: none !important; }
     #reader__dashboard_section_csr { text-align: center; }
     #reader__dashboard_section_csr button {
       font-family: 'Mitr', sans-serif !important;
-      font-size: 0.85rem !important;
+      font-size: 0.7rem !important;
       border-radius: 20px !important;
-      padding: 6px 22px !important;
-      background: linear-gradient(135deg, var(--pink), #ff6b9d) !important;
-      color: white !important;
-      border: none !important;
-      box-shadow: 0 3px 10px rgba(255,143,171,0.35) !important;
-      margin-top: 6px !important;
+      padding: 3px 14px !important;
+      background: rgba(255,143,171,0.15) !important;
+      color: var(--pink) !important;
+      border: 1px solid var(--pink-light) !important;
+      box-shadow: none !important;
+      margin-top: 3px !important;
     }
+    /* ซ่อน select camera dropdown ทั้งหมด */
+    #reader__dashboard_section_csr select { display: none !important; }
 
     /* ===== SKELETON LOADER ===== */
     .skeleton-wrap { padding: 8px 4px; }
@@ -1663,6 +1660,9 @@ function setupScanUI() {
   document.getElementById("startBtn").style.display = "none";
   document.getElementById("action-buttons").style.display = "block";
   document.getElementById("refreshCacheBtn").style.display = "inline-block";
+  // ซ่อน onboarding tip ทันทีเมื่อเริ่มสแกน
+  const tip = document.getElementById('onboardingTip');
+  if (tip) tip.style.display = 'none';
   // หยุด paw animation ระหว่างสแกน ลด CPU/battery
   const pawBg = document.getElementById('pawBg');
   if (pawBg) pawBg.style.display = 'none';
@@ -1974,8 +1974,6 @@ async function _doFinishWork(isManual = false) {
     }
   }
   isFinishing = true;
-  const saveBtn = document.getElementById('saveBtn');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.6'; }
   clearInactivityWatch(); // หยุดแจ้งเตือนเมื่อจบงาน
   const snapshotItems = [...items];
   const snapshotParcelId = pId;
@@ -2003,8 +2001,6 @@ async function _doFinishWork(isManual = false) {
     setTimeout(() => {
       isFinishing = false;
       lastScanTime = Date.now();
-      const saveBtn = document.getElementById('saveBtn');
-      if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = ''; }
       if (!isManual) setStatus("✔ พร้อมรับพัสดุใบถัดไป", "success");
     }, 1500);
   }
