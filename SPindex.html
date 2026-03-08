@@ -1,236 +1,212 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>คู่มือการนำเข้าออเดอร์จาก Shopee สู่ระบบ Lamsangstore Scanner</title>
-    <style>
-        :root {
-            --primary-color: #ee4d2d; /* Shopee Orange */
-            --secondary-color: #ff7337; /* Shopee Light Orange */
-            --bg-color: #f8fafc;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --card-bg: #ffffff;
-            --border-color: #e2e8f0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>คู่มือ Shopee — Lamsangstore Scanner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pink:       #ff8fab;
+      --pink-light: #ffccd5;
+      --pink-pale:  #fff0f3;
+      --text:       #5a3e4b;
+      --text2:      #7a5e6b;
+      --text3:      #c49aaa;
+      --radius:     24px;
+      --radius-sm:  16px;
+      --accent:     #ee4d2d;
+      --accent2:    #ff7337;
+    }
 
-        body {
-            font-family: 'Sarabun', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-        }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
+    body {
+      background: var(--pink-pale);
+      font-family: 'Mitr', 'Sarabun', sans-serif;
+      font-size: 16px;
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
 
-        header {
-            text-align: center;
-            margin-bottom: 3rem;
-            padding-bottom: 2rem;
-            border-bottom: 2px solid var(--border-color);
-        }
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 10%, #ffe0ec 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 90%, #f0d9ff 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, #fff0d6 0%, transparent 70%);
+    }
 
-        h1 {
-            color: var(--text-main);
-            font-size: 2.2rem;
-            margin-bottom: 0.5rem;
-        }
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--pink-light);
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 18px; height: 58px;
+      box-shadow: 0 2px 12px rgba(255,143,171,0.1);
+    }
+    .topbar-logo {
+      width: 36px; height: 36px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(238,77,45,0.35);
+    }
+    .topbar-title { font-size: 0.95rem; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .topbar-sub   { font-size: 0.72rem; color: var(--text3); display: block; font-weight: 400; }
+    .back-btn {
+      margin-left: auto;
+      font-size: 0.78rem; padding: 6px 14px;
+      border-radius: 20px; border: 1.5px solid var(--pink-light);
+      background: white; color: var(--pink);
+      text-decoration: none; font-family: 'Mitr', sans-serif;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { background: var(--pink); color: white; border-color: var(--pink); }
 
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-        }
+    .container { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
 
-        .step-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: transform 0.2s ease-in-out;
-        }
+    .hero {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(16px);
+      border: 1.5px solid rgba(255,204,213,0.4);
+      border-radius: var(--radius);
+      padding: 28px 24px 22px;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(255,143,171,0.1);
+    }
+    .hero-icon {
+      width: 64px; height: 64px; border-radius: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; margin: 0 auto 14px;
+      box-shadow: 0 6px 20px rgba(238,77,45,0.3);
+    }
+    .hero h1 { font-size: 1.25rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .hero p  { font-size: 0.88rem; color: var(--text3); }
 
-        .step-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
+    .section-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 28px 0 14px;
+    }
+    .section-divider::before,
+    .section-divider::after { content: ''; flex: 1; height: 1px; background: var(--pink-light); }
+    .section-divider span {
+      font-size: 0.78rem; font-weight: 600; color: var(--text3);
+      white-space: nowrap; letter-spacing: 0.3px;
+    }
 
-        .step-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
+    .step-card {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(255,204,213,0.4);
+      border-radius: var(--radius);
+      padding: 20px; margin-bottom: 14px;
+      box-shadow: 0 4px 16px rgba(255,143,171,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .step-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,143,171,0.15); }
+    .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .step-number {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; font-size: 1rem; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 10px rgba(238,77,45,0.3);
+    }
+    .step-card h2 { font-size: 1rem; font-weight: 600; color: var(--text); }
+    .step-card p  { font-size: 0.92rem; color: var(--text2); line-height: 1.7; margin-bottom: 14px; }
+    .step-card p:last-child { margin-bottom: 0; }
+    .highlight { font-weight: 600; color: var(--accent); }
 
-        .step-number {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
+    .img-box {
+      border: 1.5px solid var(--pink-light);
+      border-radius: var(--radius-sm);
+      overflow: hidden; background: #fff8fb;
+    }
+    .img-box img { width: 100%; height: auto; display: block; }
 
-        h2 {
-            margin: 0;
-            font-size: 1.4rem;
-            color: var(--text-main);
-        }
-
-        .step-description {
-            margin-bottom: 1.5rem;
-            font-size: 1.05rem;
-        }
-
-        .highlight {
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .image-container {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: #f1f5f9;
-            text-align: center;
-        }
-
-        /* Styling for the actual images once users replace the placeholder */
-        .step-image {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .section-divider {
-            margin: 4rem 0 2rem 0;
-            text-align: center;
-            position: relative;
-        }
-
-        .section-divider::before {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background-color: var(--border-color);
-            z-index: 1;
-        }
-
-        .section-divider span {
-            background-color: var(--bg-color);
-            padding: 0 1rem;
-            position: relative;
-            z-index: 2;
-            font-weight: bold;
-            color: var(--text-muted);
-            font-size: 1.2rem;
-        }
-
-        /* Import Thai Font */
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
-
-    </style>
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--pink-pale); }
+    ::-webkit-scrollbar-thumb { background: var(--pink-light); border-radius: 10px; }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1>คู่มือการจัดการออเดอร์ Shopee</h1>
-            <p class="subtitle">วิธีดาวน์โหลดไฟล์ Excel และนำเข้าสู่ระบบ Scanner</p>
-        </header>
-
-        <div class="section-divider">
-            <span>ส่วนที่ 1: การเตรียมจัดส่งและดาวน์โหลดไฟล์</span>
-        </div>
-
-        <!-- Step 1 -->
-        <div class="step-card">
-            <div class="step-header">
-                <div class="step-number">1</div>
-                <h2>ดำเนินการสั่งปริ้นพัสดุแบบปกติให้เรียบร้อย</h2>
-            </div>
-            <p class="step-description">
-                ก่อนที่จะเริ่มดาวน์โหลดข้อมูลออเดอร์ ให้คุณดำเนินการแพ็คสินค้า Drop-off และ <strong>สั่งพิมพ์ใบปะหน้าพัสดุผ่านระบบของ Shopee ตามขั้นตอนปกติให้เสร็จสมบูรณ์</strong> ก่อน
-            </p>
-        </div>
-
-        <!-- Step 2 -->
-        <div class="step-card">
-            <div class="step-header">
-                <div class="step-number">2</div>
-                <h2>เลือกแท็บ "ดำเนินการแล้ว" และส่งออกข้อมูล</h2>
-            </div>
-            <p class="step-description">
-                ที่หน้า "คำสั่งซื้อของฉัน" <strong>ข้อนี้สำคัญมาก!</strong> ให้คลิกไปที่แท็บ <span class="highlight">"ที่ต้องจัดส่ง"</span> แล้วเลือก <span class="highlight">"ดำเนินการแล้ว"</span> (Processed) จากนั้นคลิกที่ <span class="highlight">"ดาวน์โหลด"</span> (บริเวณมุมขวาบน) เพื่อดาวน์โหลดรายงานคำสั่งซื้อ จะมีหน้า Pop Up ให้เลือกวันที่ ไม่ต้องแก้ไขอะไร ดาวน์โหลดได้เลย
-            </p>
-            <div class="image-container">
-                <img class="step-image" src="SP2.jpg" alt="แท็บดำเนินการแล้ว">
-            </div>
-        </div>
-
-        <!-- Step 3 -->
-        <div class="step-card">
-            <div class="step-header">
-                <div class="step-number">3</div>
-                <h2>ดาวน์โหลดไฟล์ Excel</h2>
-            </div>
-            <p class="step-description">
-                เมื่อหน้าต่างรายงานคำสั่งซื้อปรากฏขึ้น ให้ดูที่รายงานอันบนสุด (ล่าสุด) แล้วคลิกปุ่ม <span class="highlight">"ดาวน์โหลด"</span> เพื่อเซฟไฟล์ Excel ลงเครื่อง
-            </p>
-            <div class="image-container">
-                <img class="step-image" src="SP3.jpg" alt="ดาวน์โหลดไฟล์ Excel">
-            </div>
-        </div>
-
-        <div class="section-divider">
-            <span>ส่วนที่ 2: การอัพโหลดไฟล์เข้าสู่ Scanner</span>
-        </div>
-
-        <!-- Step 4 -->
-        <div class="step-card">
-            <div class="step-header">
-                <div class="step-number">4</div>
-                <h2>เข้าสู่เว็บไซต์ Lamsangstore Scanner</h2>
-            </div>
-            <p class="step-description">
-                เปิดแท็บใหม่ในเบราว์เซอร์ แล้วไปที่เว็บไซต์ Lamsangstore Scanner เมื่อหน้าเว็บโหลดเสร็จสิ้น ให้คลิกที่ปุ่ม <span class="highlight">"เพิ่มออเดอร์ / โหลดข้อมูลสินค้า"</span> บริเวณกลางหน้าจอ
-            </p>
-            <div class="image-container">
-                <img class="step-image" src="UP1.jpg" alt="หน้าแรก Scanner">
-            </div>
-        </div>
-
-        <!-- Step 5 -->
-        <div class="step-card">
-            <div class="step-header">
-                <div class="step-number">5</div>
-                <h2>เลือกระบบและอัพโหลดไฟล์</h2>
-            </div>
-            <p class="step-description">
-                จะมีหน้าต่างป๊อปอัปแสดงขึ้นมา ในส่วนของ "เลือกช่องทาง (Marketplace)" ให้คลิกเลือกที่ <span class="highlight">"Shopee"</span> จากนั้นคลิกที่พื้นที่ <strong>"เลือกไฟล์ Excel, csv"</strong> เพื่อเลือกไฟล์ออเดอร์ (.xlsx) ที่เราเพิ่งดาวน์โหลดมา เมื่อชื่อไฟล์ปรากฏขึ้นแล้ว ให้กดปุ่ม <span class="highlight">"อัพโหลดข้อมูล"</span> เพื่อให้ระบบประมวลผล
-            </p>
-            <div class="image-container">
-                <img class="step-image" src="UP2.jpg" alt="เลือกระบบและอัพโหลดไฟล์">
-            </div>
-        </div>
-
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M12 2C9.2 2 7 4.2 7 7H5c-.6 0-1 .4-1.1.9L2.5 19.9c-.1.6.4 1.1 1 1.1h17c.6 0 1.1-.5 1-1.1l-1.4-12C19.9 7.4 19.5 7 19 7h-2c0-2.8-2.2-5-5-5zm0 2c1.7 0 3 1.3 3 3H9c0-1.7 1.3-3 3-3zm0 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+  </div>
+  <div>
+    <div class="topbar-title">คู่มือ Shopee
+      <span class="topbar-sub">Lamsangstore Scanner</span>
     </div>
+  </div>
+  <a href="index.html" class="back-btn">← กลับหน้าหลัก</a>
+</div>
 
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-icon">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="white"><path d="M12 2C9.2 2 7 4.2 7 7H5c-.6 0-1 .4-1.1.9L2.5 19.9c-.1.6.4 1.1 1 1.1h17c.6 0 1.1-.5 1-1.1l-1.4-12C19.9 7.4 19.5 7 19 7h-2c0-2.8-2.2-5-5-5zm0 2c1.7 0 3 1.3 3 3H9c0-1.7 1.3-3 3-3zm0 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+    </div>
+    <h1>คู่มือการจัดการออเดอร์ Shopee</h1>
+    <p>วิธีดาวน์โหลดไฟล์ Excel และนำเข้าสู่ระบบ Lamsangstore Scanner</p>
+  </div>
+
+  <div class="section-divider"><span>ส่วนที่ 1 — เตรียมจัดส่งและดาวน์โหลดไฟล์</span></div>
+
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">1</div>
+      <h2>ดำเนินการสั่งปริ้นพัสดุให้เรียบร้อย</h2>
+    </div>
+    <p>ก่อนดาวน์โหลดข้อมูล ให้ดำเนินการแพ็คสินค้า Drop-off และ <strong>สั่งพิมพ์ใบปะหน้าพัสดุผ่านระบบ Shopee ตามขั้นตอนปกติให้เสร็จสมบูรณ์</strong> ก่อน</p>
+  </div>
+
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">2</div>
+      <h2>เลือกแท็บ "ดำเนินการแล้ว" และส่งออกข้อมูล</h2>
+    </div>
+    <p><strong>ข้อนี้สำคัญมาก!</strong> ที่หน้า "คำสั่งซื้อของฉัน" ให้คลิกแท็บ <span class="highlight">"ที่ต้องจัดส่ง"</span> แล้วเลือก <span class="highlight">"ดำเนินการแล้ว"</span> จากนั้นคลิก <span class="highlight">"ดาวน์โหลด"</span> มุมขวาบน จะมีป๊อปอัปให้เลือกวันที่ — ไม่ต้องแก้ไขอะไร กดดาวน์โหลดได้เลย</p>
+    <div class="img-box"><img src="SP2.jpg" alt="แท็บดำเนินการแล้ว"></div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">3</div>
+      <h2>ดาวน์โหลดไฟล์ Excel</h2>
+    </div>
+    <p>เมื่อหน้าต่างรายงานปรากฏขึ้น ให้ดูที่รายงานอันบนสุด (ล่าสุด) แล้วคลิกปุ่ม <span class="highlight">"ดาวน์โหลด"</span> เพื่อเซฟไฟล์ Excel ลงเครื่อง</p>
+    <div class="img-box"><img src="SP3.jpg" alt="ดาวน์โหลดไฟล์ Excel"></div>
+  </div>
+
+  <div class="section-divider"><span>ส่วนที่ 2 — อัปโหลดไฟล์เข้าสู่ Scanner</span></div>
+
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">4</div>
+      <h2>เปิดหน้าต่างอัปโหลด</h2>
+    </div>
+    <p>เปิด Lamsangstore Scanner แล้วกดปุ่ม <span class="highlight">"📥 อัพโหลด"</span> ที่แถบเมนูด้านล่าง จะมีหน้าต่างป๊อปอัปแสดงขึ้นมา</p>
+    <div class="img-box"><img src="UP1.jpg" alt="หน้าแรก Scanner"></div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">5</div>
+      <h2>เลือก Shopee และอัปโหลด</h2>
+    </div>
+    <p>ในส่วน "เลือกช่องทาง (Marketplace)" คลิกเลือก <span class="highlight">"Shopee"</span> จากนั้นคลิก <strong>"เลือกไฟล์ (.xlsx, .csv)"</strong> แล้วเลือกไฟล์ที่ดาวน์โหลดมา เมื่อชื่อไฟล์ปรากฏแล้ว กดปุ่ม <span class="highlight">"อัปโหลดข้อมูล"</span></p>
+    <div class="img-box"><img src="UP2.jpg" alt="เลือกระบบและอัปโหลดไฟล์"></div>
+  </div>
+
+</div>
 </body>
 </html>
