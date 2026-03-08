@@ -702,7 +702,10 @@
       <div class="dash-table-card mt-3">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <h6 class="fw-bold mb-0" style="color:var(--pink);">📋 แพ็กไปแล้ว (รอบนี้)</h6>
-          <span id="sessionLogCount" style="font-size:0.72rem; color:var(--text3);">0 ใบ</span>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <span id="sessionLogCount" style="font-size:0.72rem; color:var(--text3);">0 ใบ</span>
+            <button onclick="exportSessionCSV()" style="font-size:0.68rem; padding:2px 10px; border-radius:12px; border:1.5px solid var(--pink-light); background:white; color:var(--pink); font-family:'Mitr',sans-serif; cursor:pointer;">⬇ CSV</button>
+          </div>
         </div>
         <div id="sessionLogList">
           <div class="text-center text-muted small py-2" style="font-size:0.8rem;">ยังไม่มีรายการในรอบนี้ 🌸</div>
@@ -885,6 +888,14 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && currentP) requestWakeLock();
 });
 
+// ป้องกันปิด tab / refresh โดยไม่ตั้งใจระหว่างแพ็กสินค้า
+window.addEventListener('beforeunload', (e) => {
+  if (currentP && !isFinishing) {
+    e.preventDefault();
+    e.returnValue = 'กำลังแพ็กสินค้าอยู่ ออกจากหน้านี้จะทำให้ข้อมูลหาย';
+  }
+});
+
 // ============================================================
 // 2+3. ONLINE / OFFLINE BADGE
 // ============================================================
@@ -914,6 +925,10 @@ updateNetworkBadge();
     if (fresh.length !== q.length) {
       localStorage.setItem(FKEY, JSON.stringify(fresh));
       console.log(`[FailQueue] ลบรายการเก่า ${q.length - fresh.length} รายการ`);
+    }
+    // แสดง badge ทันทีตั้งแต่เปิดแอปถ้ามี queue ค้างอยู่
+    if (fresh.length > 0) {
+      setTimeout(() => updateFailQueueBadge(), 500);
     }
   } catch(e) {}
 })();
@@ -959,7 +974,8 @@ async function retryFailedUploads() {
       try {
         const res = await callGAS("saveData", {
           parcelId: job.pId, items: job.itemsArr,
-          videoEvidence: "no_video", remark: job.remarkNote || ""
+          videoEvidence: "no_video", // chunks ไม่ได้เก็บใน queue — retry ส่งแค่ข้อมูล
+          remark: job.remarkNote || ""
         });
         if (res && !res.error) {
           console.log(`[FailQueue] retry ${job.pId} สำเร็จ`);
@@ -967,8 +983,30 @@ async function retryFailedUploads() {
       } catch(e) { remaining.push(job); }
     }
     localStorage.setItem(FAIL_QUEUE_KEY, JSON.stringify(remaining));
-    if (remaining.length < q.length) updateNetworkBadge();
+    const synced = q.length - remaining.length;
+    if (synced > 0) showSyncToast(`✅ sync สำเร็จ ${synced} รายการ`);
+    updateNetworkBadge();
   } catch(e) { console.error('retryFailedUploads:', e); }
+}
+
+function showSyncToast(msg) {
+  const toast = document.getElementById('undoToast');
+  const textEl = document.getElementById('undoToastText');
+  const undoBtn = document.getElementById('undoBtn');
+  if (!toast) return;
+  textEl.textContent = msg;
+  if (undoBtn) undoBtn.style.display = 'none';
+  toast.style.background = 'rgba(45,158,107,0.95)';
+  toast.style.opacity = '1';
+  toast.style.pointerEvents = 'none';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  if (undoHideTimer) clearTimeout(undoHideTimer);
+  undoHideTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+    toast.style.background = '';
+    if (undoBtn) undoBtn.style.display = '';
+  }, 3000);
 }
 
 function updateFailQueueBadge() {
@@ -1541,12 +1579,14 @@ async function finishWork(isManual = false) {
 
 async function processBackgroundUpload(pId, itemsArr, chunks, remarkNote = '') {
   try {
-    // ---- ดึงออกจา Local Cache เมื่อแพ็กเสร็จ ----
-    let localOrders = JSON.parse(localStorage.getItem('localOrdersCache') || '{}');
-    if (localOrders[pId]) {
-      delete localOrders[pId];
-      localStorage.setItem('localOrdersCache', JSON.stringify(localOrders));
-    }
+    // ดึงออกจาก Local Cache เมื่อแพ็กเสร็จ
+    try {
+      let localOrders = JSON.parse(localStorage.getItem('localOrdersCache') || '{}');
+      if (localOrders[pId]) {
+        delete localOrders[pId];
+        localStorage.setItem('localOrdersCache', JSON.stringify(localOrders));
+      }
+    } catch(e) { console.warn('[Cache] ล้าง localOrdersCache ไม่ได้:', e.message); }
 
     if (!navigator.onLine) {
       saveToFailQueue(pId, itemsArr, remarkNote);
@@ -1630,7 +1670,7 @@ function removeItem(idx) {
   renderList();
   if (isStrictValidationMode) updateChecklistUI();
   const name = productMap[sku] || sku;
-  showUndoToast(`ลบ "${name.length > 12 ? name.slice(0,12)+'…' : name}" แล้ว`);
+  showUndoToast(`ลบ "${name.length > 18 ? name.slice(0,18)+'…' : name}" แล้ว`);
 }
 
 // --- Checklist ---
@@ -1731,11 +1771,11 @@ function updateChecklistUI() {
     if (scanQty === item.qty) { statusClass = "matched"; icon = "✅"; }
     else if (scanQty > item.qty) { statusClass = "over"; icon = "❌"; isAllMatched = false; hasOverScan = true; }
     else { isAllMatched = false; }
-    html += `<div class="checklist-item ${statusClass}"><span>${icon} ${productMap[item.sku] || item.sku}</span><span class="badge bg-${scanQty === item.qty ? 'success' : (scanQty > item.qty ? 'danger' : 'secondary')} rounded-pill">${scanQty} / ${item.qty}</span></div>`;
+    html += `<div class="checklist-item ${statusClass}"><span>${icon} ${escHtml(productMap[item.sku] || item.sku)}</span><span class="badge bg-${scanQty === item.qty ? 'success' : (scanQty > item.qty ? 'danger' : 'secondary')} rounded-pill">${scanQty} / ${item.qty}</span></div>`;
   });
   for (let sSku in scannedItemsMap) {
     if (!expectedItemsArray.find(ex => ex.sku === sSku) && scannedItemsMap[sSku] > 0) {
-      html += `<div class="checklist-item over"><span>❌ ${productMap[sSku] || sSku} (ส่วนเกิน!)</span><span class="badge bg-danger rounded-pill">${scannedItemsMap[sSku]}</span></div>`;
+      html += `<div class="checklist-item over"><span>❌ ${escHtml(productMap[sSku] || sSku)} (ส่วนเกิน!)</span><span class="badge bg-danger rounded-pill">${scannedItemsMap[sSku]}</span></div>`;
       isAllMatched = false; hasOverScan = true;
     }
   }
@@ -1745,7 +1785,7 @@ function updateChecklistUI() {
   if (isAllMatched && !hasOverScan) {
     alertBox.className = "alert alert-success mt-2 mb-0 py-2";
     alertBox.innerHTML = "<strong>สมบูรณ์!</strong> สินค้าครบถ้วน";
-    vibrate([80, 60, 80]); // สองครั้ง = ครบแล้ว
+    vibrate([80, 60, 80]);
     speak("สินค้าครบถ้วนแล้วค่ะ", false);
   } else if (hasOverScan) {
     alertBox.className = "alert alert-danger mt-2 mb-0 py-2";
@@ -1756,7 +1796,7 @@ function updateChecklistUI() {
     if (missing.length === 1) {
       const m = missing[0];
       const need = m.qty - (scannedItemsMap[m.sku] || 0);
-      alertBox.innerHTML = `<strong>กำลังแพ็ก...</strong> ยังขาด ${productMap[m.sku] || m.sku} อีก ${need} ชิ้น`;
+      alertBox.innerHTML = `<strong>กำลังแพ็ก...</strong> ยังขาด ${escHtml(productMap[m.sku] || m.sku)} อีก ${need} ชิ้น`;
     } else {
       alertBox.innerHTML = `<strong>กำลังแพ็ก...</strong> ยังขาดสินค้าอีก ${missing.length} รายการ`;
     }
@@ -1874,6 +1914,9 @@ async function processFileUpload() {
 }
 
 // --- Search ---
+let lastReportFetchTime = 0;
+let lastReportParams = '';
+
 function openTab(tab, btn) {
   document.querySelectorAll('#scan, #search, #dash').forEach(el => el.style.display = 'none');
   document.getElementById(tab).style.display = 'block';
@@ -1881,7 +1924,16 @@ function openTab(tab, btn) {
   btn.classList.add('active');
   if (tab === 'dash') {
     refreshDash();
-    if (!document.getElementById('dashStart').value) setPreset('today', document.querySelector('.preset-btn'));
+    if (!document.getElementById('dashStart').value) {
+      setPreset('today', document.querySelector('.preset-btn'));
+    } else {
+      // มี date อยู่แล้ว — โหลดใหม่เฉพาะถ้าเกิน 5 นาที หรือ params เปลี่ยน
+      const start = document.getElementById('dashStart').value;
+      const end   = document.getElementById('dashEnd').value;
+      const key = `${start}|${end}`;
+      const stale = (Date.now() - lastReportFetchTime) > 5 * 60 * 1000;
+      if (stale || key !== lastReportParams) fetchReport();
+    }
   }
   if (tab !== 'search' && searchScanner) { searchScanner.clear(); document.getElementById("search-reader").style.display = "none"; }
 }
@@ -1947,6 +1999,8 @@ async function fetchReport() {
   document.getElementById('dashContent').style.display = 'none';
   try {
     const data = await callGAS("getReportData", { start, end });
+    lastReportFetchTime = Date.now();
+    lastReportParams = `${start}|${end}`;
     renderReport(data, start, end);
   } catch(e) {
     document.getElementById('dashLoading').style.display = 'none';
@@ -2005,6 +2059,24 @@ async function resetSession() {
     if (logList) logList.innerHTML = '<div class="text-center text-muted small py-2" style="font-size:0.8rem;">ยังไม่มีรายการในรอบนี้ 🌸</div>';
     if (logCount) logCount.textContent = '0 ใบ';
   }
+}
+
+function exportSessionCSV() {
+  const entries = Object.entries(sessionParcels);
+  if (entries.length === 0) {
+    Swal.fire('ไม่มีข้อมูล', 'ยังไม่มีรายการในรอบนี้ค่ะ', 'info'); return;
+  }
+  const today = new Date().toLocaleDateString('th-TH');
+  const rows = [['รหัสพัสดุ', 'จำนวนสินค้า (ชิ้น)', 'วันที่']];
+  entries.forEach(([pid, cnt]) => rows.push([pid, cnt, today]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `session_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function startSearchScan() {
