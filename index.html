@@ -1358,18 +1358,25 @@ function saveToFailQueue(pId, itemsArr, remarkNote) {
   } catch(e) { console.error('saveToFailQueue:', e); }
 }
 
+let _isRetrying = false;
 async function retryFailedUploads() {
-  if (!navigator.onLine) return;
+  if (!navigator.onLine || _isRetrying) return;
+  _isRetrying = true;
   try {
     const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
-    if (q.length === 0) return;
+    if (q.length === 0) { _isRetrying = false; return; }
     console.log(`[FailQueue] กำลัง retry ${q.length} รายการ...`);
     const remaining = [];
     for (const job of q) {
+      // ข้าม job ที่บันทึกในเซสชันนี้แล้ว (ป้องกัน duplicate)
+      if (sessionParcels[job.pId]) {
+        console.log(`[FailQueue] ข้าม ${job.pId} — บันทึกในเซสชันนี้แล้ว`);
+        continue;
+      }
       try {
         const res = await callGAS("saveData", {
           parcelId: job.pId, items: job.itemsArr,
-          videoEvidence: "no_video", // chunks ไม่ได้เก็บใน queue — retry ส่งแค่ข้อมูล
+          videoEvidence: "no_video",
           remark: job.remarkNote || ""
         });
         if (res && !res.error) {
@@ -1380,8 +1387,9 @@ async function retryFailedUploads() {
     localStorage.setItem(FAIL_QUEUE_KEY, JSON.stringify(remaining));
     const synced = q.length - remaining.length;
     if (synced > 0) showSyncToast(`✅ sync สำเร็จ ${synced} รายการ`);
-    updateNetworkBadge();
+    updateFailQueueBadge();
   } catch(e) { console.error('retryFailedUploads:', e); }
+  _isRetrying = false;
 }
 
 function showSyncToast(msg) {
@@ -2071,7 +2079,7 @@ async function processBackgroundUpload(pId, itemsArr, chunks, remarkNote = '') {
     const res = await callGAS("saveData", { parcelId: pId, items: itemsArr, videoEvidence: videoData || "no_video", remark: remarkNote || "" });
     if (res && res.error) throw new Error(res.error);
     console.log(`[Background] บันทึก ${pId} สำเร็จ`);
-    retryFailedUploads(); // ถ้ามี queue ค้างให้ retry ต่อทันที
+    // หมายเหตุ: ไม่ต้อง retryFailedUploads ที่นี่ — interval 60s จัดการเอง เพื่อป้องกัน duplicate
   } catch (err) {
     console.error(`[Background Error] ${pId}:`, err);
     saveToFailQueue(pId, itemsArr, remarkNote);
