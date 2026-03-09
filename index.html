@@ -1402,11 +1402,12 @@ function isGasSuccess(res) {
   if (typeof res === 'object') {
     if (res.error) return false;
     if (res.status) return ['success','ok','true'].includes(String(res.status).toLowerCase());
-    // ถ้าไม่มี error field เลย ถือว่าสำเร็จ
     return true;
   }
   return false;
 }
+
+function showSyncToast(msg) {
   const toast = document.getElementById('undoToast');
   const textEl = document.getElementById('undoToastText');
   const undoBtn = document.getElementById('undoBtn');
@@ -1454,11 +1455,11 @@ function showQueueModal() {
   } else {
     list.innerHTML = q.map((job, i) => {
       const d = job.ts ? new Date(job.ts).toLocaleString('th-TH', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' }) : '';
-      return `<div style="background:var(--pink-light); border-radius:12px; padding:10px 12px; font-size:0.82rem; color:var(--text);">
-        <div style="font-weight:600; color:var(--pink);">📦 ${escHtml(job.pId)}</div>
-        <div style="color:var(--text2); margin-top:2px;">🛍 ${job.itemsArr?.length || 0} ชิ้น ${job.remarkNote ? '· 📝 ' + escHtml(job.remarkNote) : ''}</div>
-        ${d ? `<div style="font-size:0.72rem; color:var(--text3); margin-top:2px;">🕐 ${d}</div>` : ''}
-      </div>`;
+      return '<div style="background:var(--pink-light); border-radius:12px; padding:10px 12px; font-size:0.82rem; color:var(--text);">'
+        + '<div style="font-weight:600; color:var(--pink);">📦 ' + escHtml(job.pId) + '</div>'
+        + '<div style="color:var(--text2); margin-top:2px;">🛍 ' + (job.itemsArr?.length || 0) + ' ชิ้น' + (job.remarkNote ? ' · 📝 ' + escHtml(job.remarkNote) : '') + '</div>'
+        + (d ? '<div style="font-size:0.72rem; color:var(--text3); margin-top:2px;">🕐 ' + d + '</div>' : '')
+        + '</div>';
     }).join('');
   }
   document.getElementById('queueModal').style.display = 'block';
@@ -1688,28 +1689,29 @@ async function initScanner() {
   const CACHE_TIME_KEY = "productMap_time";
   const CACHE_TTL = 60 * 60 * 1000;
   
-  const cached = localStorage.getItem(CACHE_KEY);
-  const cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || "0");
-  const isFresh = (Date.now() - cachedTime) < CACHE_TTL;
-  
-  if (cached) {
-    productMap = JSON.parse(cached);
-    setupScanUI();
-    if (!isFresh) {
-      fetchBackgroundCache(CACHE_KEY, CACHE_TIME_KEY).catch(() => {});
-    }
-    return;
-  }
-  
-  btn.innerText = "กำลังโหลดข้อมูล...";
-  btn.disabled = true;
   try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    const cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || "0");
+    const isFresh = (Date.now() - cachedTime) < CACHE_TTL;
+    
+    if (cached) {
+      productMap = JSON.parse(cached);
+      setupScanUI();
+      if (!isFresh) {
+        fetchBackgroundCache(CACHE_KEY, CACHE_TIME_KEY).catch(() => {});
+      }
+      return;
+    }
+    
+    btn.innerText = "กำลังโหลดข้อมูล...";
+    btn.disabled = true;
     await fetchBackgroundCache(CACHE_KEY, CACHE_TIME_KEY);
     setupScanUI();
   } catch (err) {
+    console.error('[initScanner error]', err);
     btn.innerText = "โหลดไม่สำเร็จ — กดเพื่อลองใหม่";
     btn.disabled = false;
-    Swal.fire('เชื่อมต่อไม่สำเร็จ', 'กรุณาตรวจสอบ GAS_URL ใน index.html\n\n' + err.message, 'error');
+    alert('เริ่มระบบไม่สำเร็จ: ' + err.message);
   }
 }
 
@@ -1742,20 +1744,26 @@ async function fetchBackgroundCache(cacheKey, cacheTimeKey) {
 }
 
 function setupScanUI() {
-  document.getElementById("app-header").style.display = "none";
-  document.getElementById("app-tabs").style.display = "none";
-  document.getElementById("startBtn").style.display = "none";
-  document.getElementById("action-buttons").style.display = "block";
-  document.getElementById("refreshCacheBtn").style.display = "inline-block";
-  // ซ่อน onboarding tip ทันทีเมื่อเริ่มสแกน
-  const tip = document.getElementById('onboardingTip');
-  if (tip) tip.style.display = 'none';
-  // หยุด paw animation ระหว่างสแกน ลด CPU/battery
-  const pawBg = document.getElementById('pawBg');
-  if (pawBg) pawBg.style.display = 'none';
-  requestWakeLock();
-  speak("ระบบพร้อมแล้วค่ะ เริ่มสแกนพัสดุได้เลย");
-  startScan();
+  try {
+    document.getElementById("app-header").style.display = "none";
+    document.getElementById("app-tabs").style.display = "none";
+    document.getElementById("startBtn").style.display = "none";
+    document.getElementById("action-buttons").style.display = "block";
+    document.getElementById("refreshCacheBtn").style.display = "inline-block";
+    const tip = document.getElementById('onboardingTip');
+    if (tip) tip.style.display = 'none';
+    const pawBg = document.getElementById('pawBg');
+    if (pawBg) pawBg.style.display = 'none';
+    requestWakeLock();
+    speak("ระบบพร้อมแล้วค่ะ เริ่มสแกนพัสดุได้เลย");
+    startScan();
+  } catch(err) {
+    console.error('[setupScanUI error]', err);
+    alert('เกิดข้อผิดพลาดในการเริ่มระบบ: ' + err.message);
+    // คืนปุ่มให้กดใหม่ได้
+    const btn = document.getElementById("startBtn");
+    if (btn) { btn.style.display = 'block'; btn.innerText = '🚀 เริ่มระบบสแกน (ลองใหม่)'; btn.disabled = false; }
+  }
 }
 
 async function refreshAllCache() {
