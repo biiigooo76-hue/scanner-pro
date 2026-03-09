@@ -1287,12 +1287,17 @@ updateNetworkBadge();
       localStorage.setItem(FKEY, JSON.stringify(fresh));
       console.log(`[FailQueue] ลบรายการเก่า ${q.length - fresh.length} รายการ`);
     }
-    // แสดง badge ทันทีตั้งแต่เปิดแอปถ้ามี queue ค้างอยู่
     if (fresh.length > 0) {
-      setTimeout(() => updateFailQueueBadge(), 500);
+      setTimeout(() => {
+        updateFailQueueBadge();
+        retryFailedUploads(); // retry ทันทีตอนเปิดแอปถ้ามี queue ค้าง
+      }, 1500);
     }
   } catch(e) {}
 })();
+
+// retry อัตโนมัติทุก 60 วินาที
+setInterval(() => retryFailedUploads(), 60000);
 
 // ============================================================
 // 4. LAST SYNC TIME
@@ -1996,6 +2001,7 @@ async function processBackgroundUpload(pId, itemsArr, chunks, remarkNote = '') {
     const res = await callGAS("saveData", { parcelId: pId, items: itemsArr, videoEvidence: videoData || "no_video", remark: remarkNote || "" });
     if (res && res.error) throw new Error(res.error);
     console.log(`[Background] บันทึก ${pId} สำเร็จ`);
+    retryFailedUploads(); // ถ้ามี queue ค้างให้ retry ต่อทันที
   } catch (err) {
     console.error(`[Background Error] ${pId}:`, err);
     saveToFailQueue(pId, itemsArr, remarkNote);
