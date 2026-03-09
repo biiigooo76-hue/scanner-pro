@@ -7,7 +7,7 @@
   <title>Lamsangstore — Scanner</title>
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#f0dde5">
+  <meta name="theme-color" content="#f5f4f0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LS Scanner">
@@ -19,7 +19,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&family=Mitr:wght@300;400;500;600&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
   <!-- บังคับ default = light mode ทุกครั้งที่โหลดไฟล์ใหม่ -->
   <script>
     try { localStorage.setItem('darkMode', '0'); } catch(e) {}
@@ -27,22 +27,22 @@
   
   <style>
     :root {
-      --pink:        #ff8fab;
-      --pink-light:  #f5ccd5;
-      --pink-pale:   #f0dde5;
-      --peach:       #ffd6a5;
+      --pink:        #c8a84b;
+      --pink-light:  #e0d090;
+      --pink-pale:   #f5f4f0;
+      --peach:       #e8d5a0;
       --lilac:       #c8b6ff;
       --mint:        #b9fbc0;
-      --cream:       #fff8f0;
-      --brown:       #8b5e52;
-      --text:        #5a3e4b;
-      --text2:       #7a5e6b;
-      --text3:       #b08898;
-      --card-bg:     #f0dde5;
-      --surface:     #f0dde5;
-      --surface2:    #e8d4dc;
-      --border:      rgba(188,128,152,0.2);
-      --border2:     #e8d0da;
+      --cream:       #fffdf8;
+      --brown:       #6a5840;
+      --text:        #3a3830;
+      --text2:       #6a6458;
+      --text3:       #9a9085;
+      --card-bg:     #f5f4f0;
+      --surface:     #f5f4f0;
+      --surface2:    #eae8e3;
+      --border:      rgba(190,188,180,0.3);
+      --border2:     #dddbd4;
       --success:     #2d9e6b;
       --danger:      #d63031;
       --warning:     #e17055;
@@ -53,9 +53,9 @@
       --radius-sm:   16px;
       --radius-xs:   10px;
       /* ── Neumorphic ── */
-      --bg:          #f0dde5;
-      --bg-d:        #e5d0da;
-      --sd:          rgba(188,128,152,0.45);
+      --bg:          #f5f4f0;
+      --bg-d:        #eae8e3;
+      --sd:          rgba(190,188,180,0.55);
       --sl:          rgba(255,255,255,0.88);
     }
     
@@ -113,7 +113,7 @@
     }
     .topbar-logo {
       width: 38px; height: 38px; border-radius: 13px;
-      background: linear-gradient(135deg, var(--pink), #ff6b9d);
+      background: linear-gradient(135deg, var(--pink), #a08030);
       display: flex; align-items: center; justify-content: center;
       font-size: 1.2rem; flex-shrink: 0;
       box-shadow: 4px 4px 10px var(--sd), -3px -3px 8px var(--sl);
@@ -156,7 +156,7 @@
     .tab-btn.active .tab-icon { transform: scale(1.1); }
     .tab-btn:hover:not(.active) { color: var(--text2); }
     .tab-btn-upload { color: var(--pink) !important; }
-    .tab-btn-upload:hover { color: #e84393 !important; }
+    .tab-btn-upload:hover { color: #a08030 !important; }
 
     /* ===== MAIN CONTENT ===== */
     .page-content { padding: 14px 14px 0; max-width: 500px; margin: 0 auto; }
@@ -199,11 +199,11 @@
     }
     .btn-main:hover { box-shadow: 8px 8px 18px rgba(9,132,227,0.4), -4px -4px 10px var(--sl); }
     .btn-save {
-      background: linear-gradient(135deg, var(--pink), #e84393);
+      background: linear-gradient(135deg, var(--pink), #a08030);
       color: white;
-      box-shadow: 6px 6px 14px rgba(255,107,157,0.4), -4px -4px 10px var(--sl);
+      box-shadow: 6px 6px 14px rgba(200,168,75,0.4), -4px -4px 10px var(--sl);
     }
-    .btn-save:hover { box-shadow: 8px 8px 18px rgba(255,107,157,0.5), -4px -4px 10px var(--sl); }
+    .btn-save:hover { box-shadow: 8px 8px 18px rgba(200,168,75,0.5), -4px -4px 10px var(--sl); }
     .btn-cancel {
       background: var(--bg);
       color: var(--text2);
@@ -271,7 +271,7 @@
     .scanner-viewfinder::before {
       content: '';
       width: 200px; height: 120px;
-      border: 2.5px solid rgba(255,143,171,0.85);
+      border: 2.5px solid rgba(200,168,75,0.85);
       border-radius: 12px;
       box-shadow: 0 0 0 2000px rgba(0,0,0,0.18);
     }
@@ -364,7 +364,7 @@
       font-size: 0.7rem !important;
       border-radius: 20px !important;
       padding: 3px 14px !important;
-      background: rgba(255,143,171,0.15) !important;
+      background: rgba(200,168,75,0.15) !important;
       color: var(--pink) !important;
       border: 1px solid var(--pink-light) !important;
       box-shadow: none !important;
@@ -472,52 +472,52 @@
 
     /* ===== CLASS-BASED DARK MODE ===== */
     html.dark-mode {
-      --pink:        #ff8fab;
-      --pink-light:  #6b3050;
-      --pink-pale:   #1a1018;
-      --text:        #f0d6e0;
-      --text2:       #c9a8b8;
-      --text3:       #886878;
-      --card-bg:     #241420;
-      --surface:     #2a1e26;
-      --surface2:    #321c28;
-      --border:      rgba(120,60,90,0.45);
-      --border2:     #5a2a40;
-      --brown:       #e8c0cc;
-      --bg:          #241420;
-      --bg-d:        #1e1018;
-      --sd:          rgba(10,0,8,0.6);
-      --sl:          rgba(80,40,60,0.35);
-      background: #241420;
-      color: #f0d6e0;
+      --pink:        #c8a84b;
+      --pink-light:  #4a3a1a;
+      --pink-pale:   #1a1917;
+      --text:        #e8e4dc;
+      --text2:       #b0a890;
+      --text3:       #786858;
+      --card-bg:     #252320;
+      --surface:     #2c2a25;
+      --surface2:    #302e28;
+      --border:      rgba(80,75,60,0.45);
+      --border2:     #4a4535;
+      --brown:       #c8b890;
+      --bg:          #252320;
+      --bg-d:        #1e1c19;
+      --sd:          rgba(10,8,5,0.65);
+      --sl:          rgba(80,70,45,0.35);
+      background: #252320;
+      color: #e8e4dc;
     }
 
     /* Layout — dark mode uses dark neu shadows */
-    html.dark-mode #app-header  { background: #241420 !important; }
-    html.dark-mode #app-tabs    { background: #241420 !important; }
-    html.dark-mode .tab-btn     { color: #886878 !important; }
-    html.dark-mode .tab-btn.active { color: #f0d6e0 !important; }
+    html.dark-mode #app-header  { background: #252320 !important; }
+    html.dark-mode #app-tabs    { background: #252320 !important; }
+    html.dark-mode .tab-btn     { color: #786858 !important; }
+    html.dark-mode .tab-btn.active { color: #e8e4dc !important; }
 
     /* Cards & surfaces */
-    html.dark-mode .card        { background: #241420 !important; }
-    html.dark-mode .parcel-box  { background: #241420 !important; }
-    html.dark-mode .order-checklist { background: #241420 !important; }
-    html.dark-mode .dash-table-card { background: #241420 !important; }
-    html.dark-mode #dailyTargetInput { background: #1e1018 !important; color: #f0d6e0 !important; border-color: #5a2a40 !important; }
-    html.dark-mode .stat-card   { background: #241420 !important; }
-    html.dark-mode .onboarding-tip  { background: #241420 !important; color: #c9a8b8 !important; }
+    html.dark-mode .card        { background: #252320 !important; }
+    html.dark-mode .parcel-box  { background: #252320 !important; }
+    html.dark-mode .order-checklist { background: #252320 !important; }
+    html.dark-mode .dash-table-card { background: #252320 !important; }
+    html.dark-mode #dailyTargetInput { background: #1e1c19 !important; color: #e8e4dc !important; border-color: #4a4535 !important; }
+    html.dark-mode .stat-card   { background: #252320 !important; }
+    html.dark-mode .onboarding-tip  { background: #252320 !important; color: #b0a890 !important; }
 
     /* Text */
-    html.dark-mode .section-title { color: #886878 !important; }
-    html.dark-mode .form-text    { color: #886878 !important; }
-    html.dark-mode .text-muted   { color: #886878 !important; }
-    html.dark-mode h6            { color: #f0d6e0 !important; }
-    html.dark-mode .small        { color: #c9a8b8; }
-    html.dark-mode .topbar-title { color: #f0d6e0 !important; }
-    html.dark-mode .topbar-sub   { color: #886878 !important; }
+    html.dark-mode .section-title { color: #786858 !important; }
+    html.dark-mode .form-text    { color: #786858 !important; }
+    html.dark-mode .text-muted   { color: #786858 !important; }
+    html.dark-mode h6            { color: #e8e4dc !important; }
+    html.dark-mode .small        { color: #b0a890; }
+    html.dark-mode .topbar-title { color: #e8e4dc !important; }
+    html.dark-mode .topbar-sub   { color: #786858 !important; }
 
     /* Status bar */
-    html.dark-mode .status-bar-full                  { background: #251820 !important; color: #9a7888 !important; border-left-color: #5a2a40 !important; }
+    html.dark-mode .status-bar-full                  { background: #252320 !important; color: #786858 !important; border-left-color: #4a4535 !important; }
     html.dark-mode .status-bar-full.bg-success        { background: rgba(6,78,59,0.35) !important;   color: #6ee7b7 !important; border-left-color: #2d9e6b !important; }
     html.dark-mode .status-bar-full.bg-danger         { background: rgba(127,29,29,0.35) !important;  color: #fca5a5 !important; border-left-color: #d63031 !important; }
     html.dark-mode .status-bar-full.bg-primary        { background: rgba(30,58,138,0.35) !important;  color: #93c5fd !important; border-left-color: #3b82f6 !important; }
@@ -526,58 +526,58 @@
     html.dark-mode .status-bar-full.bg-secondary      { background: rgba(51,65,85,0.5) !important;    color: #cbd5e1 !important; border-left-color: #64748b !important; }
 
     /* List items */
-    html.dark-mode .list-group-item { background: linear-gradient(135deg,#2a1820,#241a2c) !important; color: #f0d6e0 !important; border-left-color: #5a2a40 !important; }
-    html.dark-mode .list-group-item .btn-delete-item { color: #ff8fab !important; }
-    html.dark-mode .list-group-item[style*="e17055"] { background: linear-gradient(135deg,#2a1810,#241808) !important; }
+    html.dark-mode .list-group-item { background: #2c2a25 !important; color: #e8e4dc !important; border-left-color: #4a4535 !important; }
+    html.dark-mode .list-group-item .btn-delete-item { color: #c8a84b !important; }
+    html.dark-mode .list-group-item[style*="e17055"] { background: #2e2a1e !important; }
 
     /* Action bar */
-    html.dark-mode .action-bar-sticky { background: rgba(28,16,22,0.96) !important; border-top-color: #4a2535 !important; }
-    html.dark-mode #refreshCacheBtn   { background: #2a1e26 !important; color: var(--pink) !important; border-color: #5a2a40 !important; }
+    html.dark-mode .action-bar-sticky { background: rgba(30,28,25,0.96) !important; border-top-color: #4a4535 !important; }
+    html.dark-mode #refreshCacheBtn   { background: #2c2a25 !important; color: var(--pink) !important; border-color: #4a4535 !important; }
 
     /* Forms */
     html.dark-mode input:not([type=file]),
     html.dark-mode select,
-    html.dark-mode .form-control:not([type=file]) { background: #2a1e26 !important; color: #f0d6e0 !important; border-color: #5a2a40 !important; }
-    html.dark-mode input[type=file].form-control  { background: #2a1e26 !important; color: #c9a8b8 !important; border-color: #5a2a40 !important; }
-    html.dark-mode .input-group .btn-primary  { background: #3d1a2e !important; border-color: #5a2a40 !important; }
+    html.dark-mode .form-control:not([type=file]) { background: #2c2a25 !important; color: #e8e4dc !important; border-color: #4a4535 !important; }
+    html.dark-mode input[type=file].form-control  { background: #2c2a25 !important; color: #b0a890 !important; border-color: #4a4535 !important; }
+    html.dark-mode .input-group .btn-primary  { background: #2a2820 !important; border-color: #4a4535 !important; }
     html.dark-mode .input-group .btn-success  { background: #1a3a2a !important; border-color: #2d9e6b !important; }
-    html.dark-mode .table          { color: #f0d6e0 !important; }
-    html.dark-mode .table-light    { background: #2a1e26 !important; color: #c9a8b8 !important; }
-    html.dark-mode .table-hover tbody tr:hover { background: rgba(255,143,171,0.06) !important; }
-    html.dark-mode .dash-date-input { background: #2a1e26 !important; color: #f0d6e0 !important; border-color: #5a2a40 !important; }
+    html.dark-mode .table          { color: #e8e4dc !important; }
+    html.dark-mode .table-light    { background: #2c2a25 !important; color: #b0a890 !important; }
+    html.dark-mode .table-hover tbody tr:hover { background: rgba(200,168,75,0.06) !important; }
+    html.dark-mode .dash-date-input { background: #2c2a25 !important; color: #e8e4dc !important; border-color: #4a4535 !important; }
 
     /* Dashboard */
-    html.dark-mode .dash-presets   { background: rgba(38,26,34,0.8) !important; border-color: #5a2a40 !important; }
-    html.dark-mode .preset-btn     { color: #c9a8b8 !important; }
-    html.dark-mode .preset-btn.active { background: linear-gradient(135deg,#5a2a40,#3d1a5a) !important; color: white !important; }
-    html.dark-mode .stat-num       { color: #ff8fab !important; }
-    html.dark-mode .dash-period-badge { background: linear-gradient(135deg,#3d1a2e,#2a1040) !important; color: #f0d6e0 !important; }
+    html.dark-mode .dash-presets   { background: rgba(37,35,32,0.8) !important; border-color: #4a4535 !important; }
+    html.dark-mode .preset-btn     { color: #b0a890 !important; }
+    html.dark-mode .preset-btn.active { background: linear-gradient(135deg,#3a3020,#2a2810) !important; color: white !important; }
+    html.dark-mode .stat-num       { color: #c8a84b !important; }
+    html.dark-mode .dash-period-badge { background: linear-gradient(135deg,#302e20,#28260e) !important; color: #e8e4dc !important; }
 
     /* Checklist */
-    html.dark-mode .checklist-item          { border-bottom-color: #3d1a2e !important; color: #c9a8b8 !important; }
+    html.dark-mode .checklist-item          { border-bottom-color: #3a3820 !important; color: #b0a890 !important; }
     html.dark-mode .checklist-item.matched  { background: rgba(45,158,107,0.15) !important; color: #6ee7b7 !important; }
     html.dark-mode .checklist-item.over     { background: rgba(214,48,49,0.15) !important; color: #fca5a5 !important; }
 
     /* Remark panel */
-    html.dark-mode .remark-panel  { background: linear-gradient(135deg,#241a08,#1e180a) !important; border-color: #6b4e10 !important; }
-    html.dark-mode .remark-btn    { background: #2a1e10 !important; border-color: #6b4e10 !important; color: #e8d090 !important; }
-    html.dark-mode .remark-btn:hover, html.dark-mode .remark-btn.selected { background: #6b4e10 !important; color: #fff8e0 !important; }
+    html.dark-mode .remark-panel  { background: #2a2818 !important; border-color: #6b5010 !important; }
+    html.dark-mode .remark-btn    { background: #302e18 !important; border-color: #6b5010 !important; color: #e8d090 !important; }
+    html.dark-mode .remark-btn:hover, html.dark-mode .remark-btn.selected { background: #6b5010 !important; color: #fff8e0 !important; }
 
     /* Modal — อัปโหลด */
-    html.dark-mode .modal-content  { background: #241420 !important; }
-    html.dark-mode .modal-body     { background: #241420 !important; color: #f0d6e0 !important; }
-    html.dark-mode .modal-footer   { background: #1e1018 !important; }
-    html.dark-mode .mp-option      { background: #241420 !important; color: #f0d6e0 !important; }
-    html.dark-mode .mp-name        { color: #f0d6e0 !important; }
-    html.dark-mode .mp-desc        { color: #886878 !important; }
-    html.dark-mode .mp-guide-btn   { background: #1e1018 !important; color: var(--pink) !important; border: none !important; }
-    html.dark-mode .modal-footer .btn { color: #c9a8b8 !important; background: #1e1018 !important; border: none !important; }
+    html.dark-mode .modal-content  { background: #252320 !important; }
+    html.dark-mode .modal-body     { background: #252320 !important; color: #e8e4dc !important; }
+    html.dark-mode .modal-footer   { background: #1e1c19 !important; }
+    html.dark-mode .mp-option      { background: #252320 !important; color: #e8e4dc !important; }
+    html.dark-mode .mp-name        { color: #e8e4dc !important; }
+    html.dark-mode .mp-desc        { color: #786858 !important; }
+    html.dark-mode .mp-guide-btn   { background: #1e1c19 !important; color: var(--pink) !important; border: none !important; }
+    html.dark-mode .modal-footer .btn { color: #b0a890 !important; background: #1e1c19 !important; border: none !important; }
 
     /* Swal overrides */
-    html.dark-mode .swal2-popup    { background: #241420 !important; color: #f0d6e0 !important; }
+    html.dark-mode .swal2-popup    { background: #252320 !important; color: #e8e4dc !important; }
     html.dark-mode .swal2-title,
-    html.dark-mode .swal2-html-container { color: #f0d6e0 !important; }
-    html.dark-mode #confirmSheet { background: #241420 !important; }
+    html.dark-mode .swal2-html-container { color: #e8e4dc !important; }
+    html.dark-mode #confirmSheet { background: #252320 !important; }
 
     /* ===== PARCEL INFO BOX ===== */
     .parcel-box {
@@ -595,7 +595,7 @@
       box-shadow: 12px 12px 28px var(--sd), -12px -12px 28px var(--sl) !important;
     }
     .modal-header {
-      background: linear-gradient(135deg, var(--pink), #ff6b9d) !important;
+      background: linear-gradient(135deg, var(--pink), #a08030) !important;
       border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0 !important;
       padding: 14px 18px !important;
     }
@@ -613,7 +613,7 @@
     }
     .stat-num {
       font-size: 3rem; font-weight: 600;
-      background: linear-gradient(135deg, var(--pink), #b57bee);
+      background: linear-gradient(135deg, var(--pink), #a08030);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
@@ -621,7 +621,7 @@
     /* ===== SCROLLBAR ===== */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-d); }
-    ::-webkit-scrollbar-thumb { background: rgba(188,128,152,0.4); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: rgba(190,188,180,0.55); border-radius: 10px; }
 
     /* ===== ANIMATE ===== */
     .fade-in-up { animation: fadeInUp 0.25s ease both; }
@@ -659,12 +659,12 @@
     }
     .dash-search-btn {
       border-radius: 12px; padding: 6px 14px;
-      background: linear-gradient(135deg, var(--pink), #ff6b9d);
+      background: linear-gradient(135deg, var(--pink), #a08030);
       border: none; color: white; font-size: 0.9rem;
       cursor: pointer; transition: all 0.2s;
-      box-shadow: 4px 4px 10px rgba(255,107,157,0.4), -3px -3px 8px var(--sl);
+      box-shadow: 4px 4px 10px rgba(200,168,75,0.4), -3px -3px 8px var(--sl);
     }
-    .dash-search-btn:hover { box-shadow: 5px 5px 14px rgba(255,107,157,0.5), -3px -3px 8px var(--sl); }
+    .dash-search-btn:hover { box-shadow: 5px 5px 14px rgba(200,168,75,0.5), -3px -3px 8px var(--sl); }
     .dash-period-badge {
       background: var(--bg);
       border: none;
@@ -802,7 +802,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <div style="font-weight:700; font-size:0.95rem; color:var(--text);">⏳ รายการรอ Sync</div>
       <button onclick="syncAllNow()" style="
-        background:linear-gradient(135deg,var(--pink),#e84393); color:white; border:none;
+        background:linear-gradient(135deg,var(--pink),#a08030); color:white; border:none;
         border-radius:20px; padding:6px 18px; font-family:'Mitr',sans-serif;
         font-size:0.82rem; font-weight:600; cursor:pointer;">🔄 Sync ทันที</button>
     </div>
@@ -816,9 +816,9 @@
 
 <!-- TOP APP BAR -->
 <div id="app-header">
-  <div class="topbar-logo">🌸</div>
+  <div class="topbar-logo" style="font-family:'Inter',sans-serif; font-weight:800; font-size:0.9rem; color:white; letter-spacing:-0.5px;">LS</div>
   <div style="flex:1; margin-left:10px;">
-    <div class="topbar-title">Lamsangstore Scanner
+    <div class="topbar-title" style="font-family:'Inter','Mitr',sans-serif; font-weight:800; letter-spacing:-0.3px;">LAMSANG <span style="font-weight:400; font-size:0.82em; opacity:0.7;">Scanner</span>
       <span class="topbar-sub">ระบบแพ็กและตรวจสอบพัสดุ</span>
     </div>
   </div>
@@ -834,13 +834,13 @@
 <!-- BOTTOM NAV -->
 <div id="app-tabs">
   <button class="tab-btn active" onclick="openTab('scan', this)">
-    <span class="tab-icon">🐾</span>สแกน
+    <span class="tab-icon">📦</span>สแกน
   </button>
   <button class="tab-btn" onclick="openTab('search', this)">
     <span class="tab-icon">🔍</span>ค้นหา
   </button>
   <button class="tab-btn" onclick="openTab('dash', this)">
-    <span class="tab-icon">🎀</span>รายงาน
+    <span class="tab-icon">📊</span>รายงาน
   </button>
   <button class="tab-btn tab-btn-upload" data-bs-toggle="modal" data-bs-target="#uploadModal">
     <span class="tab-icon">📥</span>อัพโหลด
@@ -888,7 +888,7 @@
             <span id="checklistProgressLabel" style="font-size:0.7rem; font-weight:600; color:var(--pink);">0 / 0 ชิ้น</span>
           </div>
           <div style="background:var(--pink-light); border-radius:20px; height:7px; overflow:hidden;">
-            <div id="checklistProgressBar" style="height:100%; border-radius:20px; background:linear-gradient(90deg,var(--pink),#b57bee); width:0%; transition:width 0.4s cubic-bezier(0.34,1.56,0.64,1);"></div>
+            <div id="checklistProgressBar" style="height:100%; border-radius:20px; background:linear-gradient(90deg,var(--pink),#a08030); width:0%; transition:width 0.4s cubic-bezier(0.34,1.56,0.64,1);"></div>
           </div>
         </div>
         <div id="checklistContent"></div>
@@ -999,7 +999,7 @@
     <!-- Date Range Picker -->
     <div class="dash-datepicker mb-3">
       <input type="date" id="dashStart" class="dash-date-input">
-      <span style="color:#c49aaa; font-size:0.85rem;">ถึง</span>
+      <span style="color:#9a9085; font-size:0.85rem;">ถึง</span>
       <input type="date" id="dashEnd" class="dash-date-input">
       <button onclick="fetchReport()" class="dash-search-btn">🔍</button>
     </div>
@@ -1018,14 +1018,14 @@
         <div class="col-6">
           <div class="stat-card">
             <div style="font-size:1.8rem;">📦</div>
-            <div class="small mb-1" style="color:#c49aaa;">ออเดอร์ (แพ็ค)</div>
+            <div class="small mb-1" style="color:#9a9085;">ออเดอร์ (แพ็ค)</div>
             <div id="d-box" class="stat-num">0</div>
           </div>
         </div>
         <div class="col-6">
           <div class="stat-card">
             <div style="font-size:1.8rem;">🎀</div>
-            <div class="small mb-1" style="color:#c49aaa;">สินค้า (ชิ้น)</div>
+            <div class="small mb-1" style="color:#9a9085;">สินค้า (ชิ้น)</div>
             <div id="d-item" class="stat-num">0</div>
           </div>
         </div>
@@ -1156,7 +1156,7 @@
       </div>
       <div class="modal-footer" style="border-top:1.5px solid var(--pink-light); padding:14px 20px; gap:10px;">
         <button type="button" class="btn" style="border-radius:16px; border:1.5px solid #ddd; color:#888; font-family:'Mitr',sans-serif; padding:10px 22px;" data-bs-dismiss="modal">ยกเลิก</button>
-        <button type="button" onclick="processFileUpload()" style="border-radius:16px; background:linear-gradient(135deg,var(--pink),#e84393); color:white; border:none; font-family:'Mitr',sans-serif; font-weight:600; padding:10px 28px; box-shadow:0 4px 14px rgba(255,143,171,0.4); font-size:0.95rem;">
+        <button type="button" onclick="processFileUpload()" style="border-radius:16px; background:linear-gradient(135deg,var(--pink),#a08030); color:white; border:none; font-family:'Mitr',sans-serif; font-weight:600; padding:10px 28px; box-shadow:0 4px 14px rgba(200,168,75,0.4); font-size:0.95rem;">
           📤 อัปโหลดข้อมูล
         </button>
       </div>
@@ -2342,7 +2342,7 @@ function updateChecklistUI() {
     bar.style.width = pct + '%';
     bar.style.background = pct >= 100
       ? 'linear-gradient(90deg,#2d9e6b,#00b894)'
-      : 'linear-gradient(90deg,var(--pink),#b57bee)';
+      : 'linear-gradient(90deg,var(--pink),#a08030)';
   }
 
   // แสดงแต่ละรายการ expected พร้อมปุ่มลบชิ้นล่าสุด
@@ -2493,7 +2493,7 @@ async function processFileUpload() {
     showCancelButton: true,
     confirmButtonText: '📤 อัปโหลดเลย',
     cancelButtonText: 'ยกเลิก',
-    confirmButtonColor: '#ff8fab',
+    confirmButtonColor: '#c8a84b',
     cancelButtonColor: '#b2bec3',
     background: '#fff0f3',
     customClass: { popup: 'swal-popup', title: 'swal-ttl', confirmButton: 'swal-btn', cancelButton: 'swal-btn' },
@@ -2634,7 +2634,7 @@ function renderReport(data, start, end) {
   const container = document.getElementById('dashProductTable');
   const products  = data.allProducts || [];
   if (products.length === 0) {
-    container.innerHTML = '<div class="text-center small py-4" style="color:#c49aaa;">😿 ไม่พบข้อมูลในช่วงนี้</div>';
+    container.innerHTML = '<div class="text-center small py-4" style="color:#9a9085;">😿 ไม่พบข้อมูลในช่วงนี้</div>';
     return;
   }
   container.innerHTML = products.map((item, i) => `
@@ -2646,7 +2646,7 @@ function renderReport(data, start, end) {
           <div style="font-size:0.72rem; color:#b0889a;">${escHtml(item.sku || '')}</div>
         </div>
       </div>
-      <div class="dash-count">${escHtml(item.count)}<span style="font-size:0.7rem; font-weight:400; color:#c49aaa;"> ชิ้น</span></div>
+      <div class="dash-count">${escHtml(item.count)}<span style="font-size:0.7rem; font-weight:400; color:#9a9085;"> ชิ้น</span></div>
     </div>
   `).join('');
 }
@@ -2659,7 +2659,7 @@ async function resetSession() {
     showCancelButton: true,
     confirmButtonText: '🗑️ ล้างเลย',
     cancelButtonText: 'ยกเลิก',
-    confirmButtonColor: '#ff8fab',
+    confirmButtonColor: '#c8a84b',
     cancelButtonColor: '#b2bec3',
     background: '#fff0f3',
     reverseButtons: true,
@@ -2937,7 +2937,7 @@ function updateDailyTargetUI() {
   barEl.style.width = pct + '%';
   barEl.style.background = done
     ? 'linear-gradient(90deg,#2d9e6b,#00b894)'
-    : 'linear-gradient(90deg,var(--pink),#b57bee)';
+    : 'linear-gradient(90deg,var(--pink),#a08030)';
   labelEl.textContent = done
     ? `🎉 ครบเป้าแล้ว! ${orders}/${dailyTarget} กล่อง`
     : `${orders} / ${dailyTarget} กล่อง (${pct}%)`;

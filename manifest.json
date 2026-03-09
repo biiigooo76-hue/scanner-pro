@@ -4,8 +4,8 @@
   "description": "ระบบแพ็กและตรวจสอบพัสดุ Lamsangstore",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f0dde5",
-  "theme_color": "#f0dde5",
+  "background_color": "#f5f4f0",
+  "theme_color": "#f5f4f0",
   "orientation": "portrait",
   "icons": [
     {
