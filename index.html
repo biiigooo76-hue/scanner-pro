@@ -1140,18 +1140,14 @@
 <div id="confirmSheet" style="
   position:fixed; bottom:0; left:0; right:0; z-index:1100;
   background:var(--card-bg); border-radius:24px 24px 0 0;
-  padding:20px 20px 32px; box-shadow:0 -8px 32px rgba(0,0,0,0.15);
+  padding:16px 20px 28px; box-shadow:0 -8px 32px rgba(0,0,0,0.15);
   transform:translateY(100%); transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
   backdrop-filter:blur(16px); border-top:1.5px solid var(--border2);">
-  <div style="width:40px; height:4px; background:var(--pink-light); border-radius:4px; margin:0 auto 16px;"></div>
-  <div style="font-size:1rem; font-weight:700; color:var(--text); margin-bottom:4px;">📦 ยืนยันจบงาน</div>
-  <div id="confirmSheetBody" style="font-size:0.85rem; color:var(--text2); margin-bottom:16px; line-height:1.7;"></div>
-  <div style="display:flex; gap:10px;">
-    <button onclick="closeConfirmSheet()" style="flex:1; padding:12px; border-radius:16px; border:2px solid var(--border2); background:transparent; color:var(--text2); font-family:'Mitr',sans-serif; font-size:0.9rem; cursor:pointer;">ยกเลิก</button>
-    <button id="confirmSheetOk" onclick="confirmFinish()" style="flex:2; padding:12px; border-radius:16px; border:none; background:linear-gradient(135deg,var(--pink),#e84393); color:white; font-family:'Mitr',sans-serif; font-size:0.9rem; font-weight:600; cursor:pointer; box-shadow:0 4px 14px rgba(255,143,171,0.4);">💾 บันทึกและจบงาน</button>
-  </div>
+  <div style="width:40px; height:4px; background:var(--pink-light); border-radius:4px; margin:0 auto 12px;"></div>
+  <div style="font-size:0.9rem; font-weight:700; color:var(--success); margin-bottom:6px;">✅ บันทึกเรียบร้อย</div>
+  <div id="confirmSheetBody" style="font-size:0.82rem; color:var(--text2); line-height:1.7;"></div>
+  <div style="font-size:0.72rem; color:var(--text3); margin-top:8px;">สแกนพัสดุใบถัดไปเพื่อปิด</div>
 </div>
-<div id="confirmSheetOverlay" onclick="closeConfirmSheet()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:1099; backdrop-filter:blur(2px);"></div>
 
 <!-- Undo Toast -->
 <div id="undoToast" style="
@@ -1840,6 +1836,7 @@ function editParcelId() {
 
 function processNewParcel(text, carrier) {
   const wasEditing = isEditingId;
+  closeConfirmSheet(); // ปิด summary sheet เมื่อสแกนพัสดุใหม่
   currentP = text;
   if (!wasEditing) items = [];
   isEditingId = false;
@@ -1897,11 +1894,11 @@ async function cancelWork() {
 
 let _pendingFinishManual = false;
 
-function showConfirmSheet(isManual) {
+async function showConfirmSheet(isManual) {
   _pendingFinishManual = isManual;
   const unknownCount = items.filter(c => !productMap[c]).length;
   const unknownWarning = unknownCount > 0
-    ? `<div style="margin-top:8px; padding:8px 12px; border-radius:10px; background:rgba(225,112,85,0.12); color:#e17055; font-size:0.82rem;">⚠️ มีสินค้าไม่รู้จัก ${unknownCount} ชิ้น — ตรวจสอบก่อนบันทึก</div>`
+    ? `<div style="margin-top:6px; color:#e17055; font-size:0.78rem;">⚠️ มีสินค้าไม่รู้จัก ${unknownCount} ชิ้น</div>`
     : '';
   document.getElementById('confirmSheetBody').innerHTML = `
     <div>📬 <strong>พัสดุ:</strong> ${escHtml(currentP)}</div>
@@ -1910,12 +1907,12 @@ function showConfirmSheet(isManual) {
     ${unknownWarning}
   `;
   document.getElementById('confirmSheet').style.transform = 'translateY(0)';
-  document.getElementById('confirmSheetOverlay').style.display = 'block';
+  // บันทึกทันที ไม่รอกดปุ่ม
+  await _doFinishWork(isManual);
 }
 
 function closeConfirmSheet() {
   document.getElementById('confirmSheet').style.transform = 'translateY(100%)';
-  document.getElementById('confirmSheetOverlay').style.display = 'none';
 }
 
 async function confirmFinish() {
