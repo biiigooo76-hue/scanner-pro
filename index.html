@@ -782,6 +782,35 @@
   <span id="offlineQueueCount" style="margin-left:6px; opacity:0.85;"></span>
 </div>
 
+<!-- Queue Pending Banner (online แต่มี queue ค้าง) -->
+<div id="queueBanner" onclick="showQueueModal()" style="
+  display:none; position:fixed; top:var(--topbar-h); left:0; right:0; z-index:199;
+  background:linear-gradient(135deg,#b45309,#92400e);
+  color:white; text-align:center; cursor:pointer;
+  padding:8px 16px; font-size:0.8rem; font-family:'Mitr',sans-serif;
+  box-shadow:0 2px 12px rgba(0,0,0,0.2);">
+  ⏳ มี <span id="queueBannerCount">0</span> รายการรอ sync — <u>แตะเพื่อดูและ sync</u>
+</div>
+
+<!-- Queue Modal -->
+<div id="queueModal" style="display:none; position:fixed; inset:0; z-index:1200; background:rgba(0,0,0,0.45); backdrop-filter:blur(4px);" onclick="closeQueueModal()">
+  <div onclick="event.stopPropagation()" style="
+    position:absolute; bottom:0; left:0; right:0;
+    background:var(--card-bg); border-radius:24px 24px 0 0;
+    padding:20px 16px 32px; max-height:70vh; display:flex; flex-direction:column;
+    box-shadow:0 -8px 32px rgba(0,0,0,0.2); font-family:'Mitr',sans-serif;">
+    <div style="width:40px; height:4px; background:var(--pink-light); border-radius:4px; margin:0 auto 14px;"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div style="font-weight:700; font-size:0.95rem; color:var(--text);">⏳ รายการรอ Sync</div>
+      <button onclick="syncAllNow()" style="
+        background:linear-gradient(135deg,var(--pink),#e84393); color:white; border:none;
+        border-radius:20px; padding:6px 18px; font-family:'Mitr',sans-serif;
+        font-size:0.82rem; font-weight:600; cursor:pointer;">🔄 Sync ทันที</button>
+    </div>
+    <div id="queueList" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px;"></div>
+  </div>
+</div>
+
 <!-- แอนิเมชันพื้นหลัง -->
 <div id="pawBg"></div>
 <canvas id="overlayCanvas" style="display:none;"></canvas>
@@ -1378,11 +1407,52 @@ function showSyncToast(msg) {
 function updateFailQueueBadge() {
   const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
   const badge = document.getElementById('networkBadge');
-  if (!badge) return;
+  const queueBanner = document.getElementById('queueBanner');
+  const pageContent = document.querySelector('.page-content');
   if (q.length > 0 && navigator.onLine) {
-    badge.style.background = '#fef3c7'; badge.style.color = '#92400e';
-    badge.textContent = `⏳ รอ sync ${q.length} รายการ`;
-  } else { updateNetworkBadge(); }
+    // แสดง queue banner แทน network badge
+    if (badge) { badge.style.background = '#fef3c7'; badge.style.color = '#92400e'; badge.textContent = `⏳ รอ sync ${q.length}`; }
+    if (queueBanner) {
+      document.getElementById('queueBannerCount').textContent = q.length;
+      queueBanner.style.display = 'block';
+      if (pageContent) pageContent.style.marginTop = 'calc(var(--topbar-h) + 36px)';
+    }
+  } else {
+    if (queueBanner) queueBanner.style.display = 'none';
+    updateNetworkBadge();
+  }
+}
+
+function showQueueModal() {
+  const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
+  const list = document.getElementById('queueList');
+  if (!list) return;
+  if (q.length === 0) {
+    list.innerHTML = '<div style="text-align:center; color:var(--text3); padding:20px;">✅ ไม่มีรายการค้าง</div>';
+  } else {
+    list.innerHTML = q.map((job, i) => {
+      const d = job.ts ? new Date(job.ts).toLocaleString('th-TH', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' }) : '';
+      return `<div style="background:var(--pink-light); border-radius:12px; padding:10px 12px; font-size:0.82rem; color:var(--text);">
+        <div style="font-weight:600; color:var(--pink);">📦 ${escHtml(job.pId)}</div>
+        <div style="color:var(--text2); margin-top:2px;">🛍 ${job.itemsArr?.length || 0} ชิ้น ${job.remarkNote ? '· 📝 ' + escHtml(job.remarkNote) : ''}</div>
+        ${d ? `<div style="font-size:0.72rem; color:var(--text3); margin-top:2px;">🕐 ${d}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('queueModal').style.display = 'block';
+}
+
+function closeQueueModal() {
+  document.getElementById('queueModal').style.display = 'none';
+}
+
+async function syncAllNow() {
+  const btn = document.querySelector('#queueModal button');
+  if (btn) { btn.textContent = '⏳ กำลัง sync...'; btn.disabled = true; }
+  await retryFailedUploads();
+  closeQueueModal();
+  updateFailQueueBadge();
+  if (btn) { btn.textContent = '🔄 Sync ทันที'; btn.disabled = false; }
 }
 
 // ============================================================
