@@ -1379,7 +1379,7 @@ async function retryFailedUploads() {
           videoEvidence: "no_video",
           remark: job.remarkNote || ""
         });
-        if (res && !res.error) {
+        if (isGasSuccess(res)) {
           console.log(`[FailQueue] retry ${job.pId} สำเร็จ`);
         } else { remaining.push(job); }
       } catch(e) { remaining.push(job); }
@@ -1392,7 +1392,21 @@ async function retryFailedUploads() {
   _isRetrying = false;
 }
 
-function showSyncToast(msg) {
+// เช็ก response จาก GAS ว่าสำเร็จหรือไม่ (รองรับทุกรูปแบบ)
+function isGasSuccess(res) {
+  if (!res) return false;
+  if (typeof res === 'string') {
+    const lower = res.toLowerCase();
+    return lower.includes('success') || lower.includes('ok') || lower === 'true';
+  }
+  if (typeof res === 'object') {
+    if (res.error) return false;
+    if (res.status) return ['success','ok','true'].includes(String(res.status).toLowerCase());
+    // ถ้าไม่มี error field เลย ถือว่าสำเร็จ
+    return true;
+  }
+  return false;
+}
   const toast = document.getElementById('undoToast');
   const textEl = document.getElementById('undoToastText');
   const undoBtn = document.getElementById('undoBtn');
@@ -2077,7 +2091,7 @@ async function processBackgroundUpload(pId, itemsArr, chunks, remarkNote = '') {
 
     const videoData = await convertChunksToBase64(chunks);
     const res = await callGAS("saveData", { parcelId: pId, items: itemsArr, videoEvidence: videoData || "no_video", remark: remarkNote || "" });
-    if (res && res.error) throw new Error(res.error);
+    if (!isGasSuccess(res)) throw new Error(res?.error || 'GAS response ไม่สำเร็จ');
     console.log(`[Background] บันทึก ${pId} สำเร็จ`);
     // หมายเหตุ: ไม่ต้อง retryFailedUploads ที่นี่ — interval 60s จัดการเอง เพื่อป้องกัน duplicate
   } catch (err) {
