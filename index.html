@@ -1261,7 +1261,28 @@ function releaseWakeLock() {
   if (wakeLock) { wakeLock.release(); wakeLock = null; }
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && currentP) requestWakeLock();
+  if (document.visibilityState === 'hidden') {
+    // หยุดกล้องบันทึกวิดีโอทันทีเมื่อออกจากแอป
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      try { if (mediaRecorder._stopDraw) mediaRecorder._stopDraw(); mediaRecorder.stop(); isRecording = false; } catch(e) {}
+    }
+    // หยุดสแกนเนอร์ชั่วคราว
+    if (scanner) { try { scanner.pause(true); } catch(e) {} }
+    releaseWakeLock();
+  } else if (document.visibilityState === 'visible') {
+    if (currentP) {
+      requestWakeLock();
+      if (scanner) { try { scanner.resume(); } catch(e) {} }
+      if (!isRecording) startCameraRecording().catch(() => {});
+    }
+  }
+});
+
+// pagehide — ปิดกล้องทุกตัวเมื่อปิด tab หรือ navigate ออก
+window.addEventListener('pagehide', () => {
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  if (scanner) { try { scanner.clear(); } catch(e) {} }
 });
 
 // ป้องกันปิด tab / refresh โดยไม่ตั้งใจระหว่างแพ็กสินค้า
@@ -1983,7 +2004,7 @@ async function cancelWork() {
   speak("ยกเลิกงานและไม่บันทึกข้อมูลค่ะ");
   await stopCameraRecording();
   recordedChunks = [];
-  await resetAppForNext();
+  await closeAppCompletely();
   isFinishing = false;
   setStatus("✖ ยกเลิกงานเรียบร้อย", "secondary");
 }
