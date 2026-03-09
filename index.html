@@ -532,7 +532,12 @@
 
     /* Action bar */
     html.dark-mode .action-bar-sticky { background: rgba(30,28,25,0.96) !important; border-top-color: #4a4535 !important; }
-    html.dark-mode #refreshCacheBtn   { background: #2c2a25 !important; color: var(--pink) !important; border-color: #4a4535 !important; }
+    html.dark-mode #refreshCacheBtn   { background: #2c2a25 !important; color: var(--pink) !important; }
+    html.dark-mode .btn-neu-sm        { background: #2c2a25 !important; color: var(--pink) !important; }
+    html.dark-mode .btn-neu-icon      { background: #2c2a25 !important; color: #b0a890 !important; }
+    html.dark-mode .input-neu-wrap    { background: #1e1c19 !important; }
+    html.dark-mode .file-input-neu    { background: #1e1c19 !important; color: #b0a890 !important; }
+    html.dark-mode #dailyTargetInput  { background: #1e1c19 !important; color: #e8e4dc !important; }
 
     /* Forms */
     html.dark-mode input:not([type=file]),
@@ -758,14 +763,89 @@
     .mp-desc { font-size: 0.72rem; color: #b0889a; margin-top: 1px; }
     .mp-guide-btn {
       margin-left: auto; flex-shrink: 0;
-      font-size: 0.72rem; padding: 4px 10px;
-      border-radius: 12px; border: 1.5px solid var(--pink-light);
+      font-size: 0.72rem; padding: 5px 11px;
+      border-radius: 12px; border: none;
       background: var(--bg); color: var(--pink);
       text-decoration: none; font-family: 'Mitr', sans-serif;
       transition: all 0.2s; white-space: nowrap;
       display: flex; align-items: center; gap: 4px;
+      box-shadow: 3px 3px 7px var(--sd), -3px -3px 7px var(--sl);
     }
-    .mp-guide-btn:hover { background: var(--pink); color: white; border-color: var(--pink); }
+    .mp-guide-btn:hover {
+      box-shadow: inset 2px 2px 5px var(--sd), inset -2px -2px 5px var(--sl);
+      color: var(--pink);
+    }
+
+    /* ===== NEU HELPER CLASSES ===== */
+    /* neumorphic small icon/action button */
+    .btn-neu-icon {
+      background: var(--bg); border: none; border-radius: 12px;
+      padding: 9px 14px; font-size: 1rem; cursor: pointer;
+      box-shadow: 4px 4px 10px var(--sd), -4px -4px 10px var(--sl);
+      color: var(--text2); transition: all 0.15s; flex-shrink: 0;
+    }
+    .btn-neu-icon:hover, .btn-neu-icon:active {
+      box-shadow: inset 3px 3px 7px var(--sd), inset -3px -3px 7px var(--sl);
+    }
+    /* neumorphic small text button (csv, reset, etc.) */
+    .btn-neu-sm {
+      border: none; background: var(--bg); border-radius: 12px;
+      box-shadow: 3px 3px 8px var(--sd), -3px -3px 8px var(--sl);
+      color: var(--pink); font-family: 'Mitr', sans-serif; font-weight: 500;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-neu-sm:hover { box-shadow: inset 2px 2px 5px var(--sd), inset -2px -2px 5px var(--sl); }
+    /* neumorphic gold action button */
+    .btn-neu-gold {
+      background: linear-gradient(135deg, var(--pink), #a08030);
+      color: white; border: none; border-radius: 12px;
+      font-family: 'Mitr', sans-serif; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+      box-shadow: 4px 4px 10px rgba(200,168,75,0.4), -3px -3px 8px var(--sl);
+    }
+    .btn-neu-gold:hover { box-shadow: 5px 5px 14px rgba(200,168,75,0.5), -3px -3px 8px var(--sl); }
+    /* neumorphic inset input wrapper */
+    .input-neu-wrap {
+      background: var(--bg); border-radius: 16px; flex: 1; position: relative;
+      box-shadow: inset 4px 4px 10px var(--sd), inset -4px -4px 10px var(--sl);
+      display: flex; align-items: center;
+    }
+    .input-neu-wrap input {
+      background: transparent; border: none; outline: none;
+      padding: 12px 14px; width: 100%;
+      font-family: 'Mitr', sans-serif; font-size: 0.93rem; color: var(--text);
+    }
+    /* neumorphic inset file input */
+    .file-input-neu {
+      background: var(--bg) !important; border: none !important;
+      border-radius: 14px !important; outline: none !important;
+      box-shadow: inset 4px 4px 10px var(--sd), inset -4px -4px 10px var(--sl) !important;
+      color: var(--text2) !important; padding: 10px 14px !important;
+      font-family: 'Mitr', sans-serif !important;
+    }
+    /* network badge — neumorphic */
+    #networkBadge {
+      background: var(--bg); border-radius: 20px;
+      box-shadow: 3px 3px 7px var(--sd), -3px -3px 7px var(--sl);
+      transition: all 0.3s ease;
+    }
+    /* darkModeBtn — neumorphic */
+    #darkModeBtn {
+      background: var(--bg) !important; border: none !important;
+      border-radius: 10px !important; cursor: pointer;
+      box-shadow: 3px 3px 7px var(--sd), -3px -3px 7px var(--sl);
+      transition: all 0.15s; line-height: 1;
+    }
+    #darkModeBtn:hover {
+      box-shadow: inset 2px 2px 5px var(--sd), inset -2px -2px 5px var(--sl);
+    }
+    /* search tab layout */
+    .search-bar-row {
+      display: flex; gap: 8px; align-items: center;
+    }
+    html.dark-mode .input-neu-wrap input { color: #e8e4dc; }
+    html.dark-mode .btn-neu-icon { color: #b0a890; }
+    html.dark-mode .btn-neu-sm { background: #2c2a25 !important; }
   </style>
 </head>
 <body>
@@ -824,8 +904,8 @@
   </div>
   <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0;">
     <div style="display:flex; align-items:center; gap:6px;">
-      <button id="darkModeBtn" onclick="toggleDarkMode()" title="สลับธีม" style="background:none; border:none; cursor:pointer; font-size:1.1rem; padding:2px 4px; border-radius:8px; line-height:1;">🌙</button>
-      <span id="networkBadge" style="font-size:0.72rem; font-weight:600; padding:3px 9px; border-radius:20px; letter-spacing:0.2px; background:#d1fae5; color:#065f46; transition:all 0.3s ease;">🟢 ออนไลน์</span>
+      <button id="darkModeBtn" onclick="toggleDarkMode()" title="สลับธีม" style="font-size:1.1rem; padding:5px 7px;">🌙</button>
+      <span id="networkBadge" style="font-size:0.72rem; font-weight:600; padding:4px 10px; letter-spacing:0.2px; color:var(--success);">🟢 ออนไลน์</span>
     </div>
     <span id="syncTimeBadge" style="font-size:0.72rem; color:var(--text3);">—</span>
   </div>
@@ -871,7 +951,7 @@
         <button class="ob-close" onclick="dismissOnboarding()">✕</button>
       </div>
 
-      <button id="startBtn" onclick="initScanner()" class="btn-custom btn-main mb-3 w-100 shadow">🚀 เริ่มระบบสแกน</button>
+      <button id="startBtn" onclick="initScanner()" class="btn-custom btn-main mb-3 w-100">🚀 เริ่มระบบสแกน</button>
       
       <div id="reader" style="display:none" class="scanner-wrap">
         <div class="scanner-viewfinder">
@@ -932,7 +1012,7 @@
       
       <ul id="itemList" style="display:none;"></ul>
 
-      <button id="refreshCacheBtn" onclick="refreshAllCache()" class="btn btn-sm mb-2 w-100 mt-3" style="display:none; border-radius:18px; border:1.5px solid var(--pink-light); color:var(--pink); background:var(--bg); font-family:'Mitr',sans-serif; font-size:0.88rem; padding:8px;">🔄 ดึงข้อมูลล่าสุด (สินค้า & ออเดอร์)</button>
+      <button id="refreshCacheBtn" onclick="refreshAllCache()" class="btn-neu-sm mb-2 w-100 mt-3" style="display:none; font-size:0.88rem; padding:9px;">🔄 ดึงข้อมูลล่าสุด (สินค้า & ออเดอร์)</button>
       
       <!-- Fix 6: sticky action bar ไม่ถูก nav บัง + Fix 1: col-7/col-5 -->
       <div id="action-buttons" class="action-bar-sticky" style="display:none">
@@ -953,12 +1033,14 @@
     <div class="card p-3">
       <div class="mb-3">
         <div id="search-reader" style="display:none; margin-bottom: 15px;"></div>
-        <!-- ข้อ 9: clear button ใน search input -->
-        <div class="input-group" style="position:relative;">
-          <input id="searchInput" class="form-control rounded-start-4 p-3" placeholder="พิมพ์หรือสแกนรหัสพัสดุ..." onkeypress="handleEnter(event)" oninput="debouncedSearch(); toggleClearBtn()">
-          <button id="clearSearchBtn" onclick="clearSearch()" style="display:none; position:absolute; right:90px; top:50%; transform:translateY(-50%); z-index:10; background:none; border:none; color:#aaa; font-size:1rem; cursor:pointer; padding:4px 8px; line-height:1;">✕</button>
-          <button class="btn btn-primary px-3" onclick="startSearchScan()" title="สแกนด้วยกล้อง">📷</button>
-          <button class="btn btn-success rounded-end-4 px-4" onclick="runSearch()">ค้นหา</button>
+        <!-- search bar — neumorphic -->
+        <div class="search-bar-row">
+          <div class="input-neu-wrap">
+            <input id="searchInput" placeholder="พิมพ์หรือสแกนรหัสพัสดุ..." onkeypress="handleEnter(event)" oninput="debouncedSearch(); toggleClearBtn()">
+            <button id="clearSearchBtn" onclick="clearSearch()" style="display:none; position:absolute; right:8px; background:none; border:none; color:var(--text3); font-size:1rem; cursor:pointer; padding:4px; line-height:1; z-index:2;">✕</button>
+          </div>
+          <button class="btn-neu-icon" onclick="startSearchScan()" title="สแกนด้วยกล้อง">📷</button>
+          <button class="btn-neu-gold" onclick="runSearch()" style="padding:9px 18px; font-size:0.9rem;">ค้นหา</button>
         </div>
         <div class="form-text text-muted ms-2 small">💡 ค้นหาได้ทั้งตัวพิมพ์เล็กและใหญ่</div>
       </div>
@@ -1037,9 +1119,9 @@
           <div style="display:flex; align-items:center; gap:6px;">
             <input id="dailyTargetInput" type="number" min="0" max="999" placeholder="กล่อง/วัน"
               oninput="saveDailyTarget(this.value)"
-              style="width:80px; padding:4px 8px; border-radius:10px; border:1.5px solid var(--pink-light);
+              style="width:80px; padding:5px 8px; border-radius:10px; border:none; outline:none;
                      font-family:'Mitr',sans-serif; font-size:0.82rem; color:var(--text); text-align:center;
-                     background:var(--surface);">
+                     background:var(--bg); box-shadow:inset 3px 3px 7px var(--sd), inset -3px -3px 7px var(--sl);">
             <span style="font-size:0.72rem; color:var(--text3);">กล่อง</span>
           </div>
         </div>
@@ -1066,7 +1148,7 @@
           <h6 class="fw-bold mb-0" style="color:var(--pink);">📋 แพ็กไปแล้ว (รอบนี้)</h6>
           <div style="display:flex; gap:6px; align-items:center;">
             <span id="sessionLogCount" style="font-size:0.72rem; color:var(--text3);">0 ใบ</span>
-            <button onclick="exportSessionCSV()" style="font-size:0.72rem; padding:2px 10px; border-radius:12px; border:1.5px solid var(--pink-light); background:var(--bg); color:var(--pink); font-family:'Mitr',sans-serif; cursor:pointer;">⬇ CSV</button>
+            <button onclick="exportSessionCSV()" class="btn-neu-sm" style="font-size:0.72rem; padding:3px 10px;">⬇ CSV</button>
           </div>
         </div>
         <div id="sessionLogList">
@@ -1076,8 +1158,8 @@
     </div>
     <!-- Reset button -->
     <div class="text-center mt-3">
-      <button class="btn btn-sm" onclick="resetSession()" 
-        style="border-radius:var(--radius-sm); border:1.5px solid var(--pink-light); color:var(--pink); background:var(--bg); font-family:Mitr,sans-serif; font-size:0.88rem; padding:8px 20px;">
+      <button class="btn-neu-sm" onclick="resetSession()"
+        style="font-size:0.88rem; padding:9px 22px;">
         รีเซ็ตสถิติและหน่วยความจำ
       </button>
     </div>
@@ -1151,12 +1233,12 @@
         </div>
         <div class="mb-2">
           <label class="form-label fw-600 small mb-2" style="color:var(--brown);">เลือกไฟล์ (.xlsx, .csv)</label>
-          <input type="file" id="fileInput" class="form-control" style="border-radius:14px; border:1.5px solid var(--pink-light);" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+          <input type="file" id="fileInput" class="form-control file-input-neu" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         </div>
       </div>
-      <div class="modal-footer" style="border-top:1.5px solid var(--pink-light); padding:14px 20px; gap:10px;">
-        <button type="button" class="btn" style="border-radius:16px; border:1.5px solid #ddd; color:#888; font-family:'Mitr',sans-serif; padding:10px 22px;" data-bs-dismiss="modal">ยกเลิก</button>
-        <button type="button" onclick="processFileUpload()" style="border-radius:16px; background:linear-gradient(135deg,var(--pink),#a08030); color:white; border:none; font-family:'Mitr',sans-serif; font-weight:600; padding:10px 28px; box-shadow:0 4px 14px rgba(200,168,75,0.4); font-size:0.95rem;">
+      <div class="modal-footer" style="border-top:1px solid var(--border); padding:14px 20px; gap:10px;">
+        <button type="button" class="btn-neu-sm" style="padding:10px 22px; font-size:0.9rem;" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" onclick="processFileUpload()" class="btn-neu-gold" style="padding:10px 28px; font-size:0.95rem;">
           📤 อัปโหลดข้อมูล
         </button>
       </div>
@@ -1300,13 +1382,13 @@ function updateNetworkBadge() {
   const pageContent = document.querySelector('.page-content');
   if (!badge) return;
   if (navigator.onLine) {
-    badge.style.background = '#d1fae5'; badge.style.color = '#065f46';
+    badge.style.color = 'var(--success)';
     badge.textContent = '🟢 ออนไลน์';
     if (banner) banner.style.display = 'none';
     if (pageContent) pageContent.style.marginTop = '';
     retryFailedUploads();
   } else {
-    badge.style.background = '#fee2e2'; badge.style.color = '#991b1b';
+    badge.style.color = 'var(--danger)';
     badge.textContent = '🔴 ออฟไลน์';
     if (banner) {
       banner.style.display = 'block';
