@@ -2047,36 +2047,34 @@ async function _doFinishWork(isManual = false) {
     if (!currentRemark && !validateCurrentOrder()) currentRemark = hasOver ? 'สินค้าเกินจำนวน' : 'สินค้าไม่ครบ';
   }
   isFinishing = true;
-  clearInactivityWatch(); // หยุดแจ้งเตือนเมื่อจบงาน
+  clearInactivityWatch();
   const snapshotItems = [...items];
   const snapshotParcelId = pId;
   const snapshotRemark = currentRemark;
+  const count = snapshotItems.length;
+  const summaryMsg = count > 0 ? `บันทึกสินค้า ${count} ชิ้น เรียบร้อยค่ะ` : `บันทึกพัสดุเบื้องหลังเรียบร้อยค่ะ`;
+
   try {
     const videoChunks = await stopCameraRecording();
-    const count = snapshotItems.length;
-    const summaryMsg = count > 0 ? `บันทึกสินค้า ${count} ชิ้น เรียบร้อยค่ะ` : `บันทึกพัสดุเบื้องหลังเรียบร้อยค่ะ`;
+    sessionParcels[snapshotParcelId] = { count, time: Date.now() };
 
+    // Reset UI ทันที ไม่รอ upload
     if (isManual) {
       await closeAppCompletely();
-      speak(summaryMsg, false);
     } else {
       await resetAppForNext();
-      speak(summaryMsg + " สแกนพัสดุใบถัดไปได้เลยค่ะ", false);
-      setStatus("⏳ กำลังเตรียมรับใบถัดไป...", "light");
+      setStatus("✔ พร้อมรับพัสดุใบถัดไป", "success");
     }
-    sessionParcels[snapshotParcelId] = { count, time: Date.now() };
-    // ซิงค์ทันที (await)
-    await processBackgroundUpload(snapshotParcelId, snapshotItems, videoChunks, snapshotRemark);
+    isFinishing = false;
+    lastScanTime = Date.now();
+    speak(summaryMsg + (isManual ? "" : " สแกนพัสดุใบถัดไปได้เลยค่ะ"), false);
+
+    // Upload เบื้องหลัง ไม่ await
+    processBackgroundUpload(snapshotParcelId, snapshotItems, videoChunks, snapshotRemark);
   } catch (err) {
     console.error('[finishWork error]', err);
+    isFinishing = false;
     speak("เกิดข้อผิดพลาด กรุณาลองใหม่ค่ะ", false);
-  } finally {
-    // รับประกันว่า isFinishing จะถูก reset เสมอ ไม่ว่าจะ error หรือไม่
-    setTimeout(() => {
-      isFinishing = false;
-      lastScanTime = Date.now();
-      if (!isManual) setStatus("✔ พร้อมรับพัสดุใบถัดไป", "success");
-    }, 1500);
   }
 }
 
