@@ -1881,6 +1881,20 @@ async function fetchBackgroundCache(cacheKey, cacheTimeKey) {
     try {
       localStorage.setItem('localOrdersCache', JSON.stringify(orderRes));
       console.log("[Cache] ซิงค์ออเดอร์ลงมือถือสำเร็จ:", Object.keys(orderRes).length, "ออเดอร์");
+      // ✅ Merge remark จาก pending orders ลง orderRemarkMap (ให้มือถือเห็น remark ที่อัปโหลดจากคอม)
+      const remarkFromOrders = {};
+      for (const tracking in orderRes) {
+        const items = orderRes[tracking];
+        if (Array.isArray(items)) {
+          const remark = items.find(i => i.remark)?.remark || '';
+          if (remark) remarkFromOrders[tracking] = remark;
+        }
+      }
+      if (Object.keys(remarkFromOrders).length > 0) {
+        const existingRemark = JSON.parse(localStorage.getItem('orderRemarkMap') || '{}');
+        localStorage.setItem('orderRemarkMap', JSON.stringify({ ...existingRemark, ...remarkFromOrders }));
+        console.log("[Cache] บันทึก remark ลูกค้า:", Object.keys(remarkFromOrders).length, "ใบ");
+      }
     } catch(e) { console.warn('[Cache] บันทึก orders ไม่ได้:', e.message); }
   } else if (orderRes && orderRes.error) {
     console.error("Backend error:", orderRes.error);
@@ -2598,7 +2612,7 @@ async function processFileUpload() {
       }
       for (const key in trackingMap) {
         const [tracking, sku] = key.split('|');
-        extractData.push({ marketplace, tracking, sku, qty: trackingMap[key] });
+        extractData.push({ marketplace, tracking, sku, qty: trackingMap[key], remark: remarkMap[tracking] || "" });
       }
     } else {
       for (let i = startRow; i < rows.length; i++) {
@@ -2608,7 +2622,6 @@ async function processFileUpload() {
         const qty      = parseInt(row[map.qty]) || 1;
         if (!tracking || !sku || tracking === 'UNDEFINED' || sku === 'UNDEFINED') continue;
         if (tracking.length < 5 || tracking.includes(' ')) continue;
-        extractData.push({ marketplace, tracking, sku, qty });
         // ดึง remark (Shopee: [49, 57], TikTok: 52, Page365: 22)
         if (!remarkMap[tracking] && map.remark !== undefined) {
           let rv = '';
@@ -2620,6 +2633,7 @@ async function processFileUpload() {
           }
           if (rv) remarkMap[tracking] = rv;
         }
+        extractData.push({ marketplace, tracking, sku, qty, remark: remarkMap[tracking] || "" });
       }
     }
 
