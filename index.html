@@ -1042,6 +1042,11 @@
         </div>
       </div>
       
+      <!-- Customer Remark Box — แสดงหมายเหตุลูกค้าจากไฟล์ Marketplace -->
+      <div id="customerRemarkBox" class="remark-display-box">
+        <span class="emoji-theme">📝</span> <strong>หมายเหตุลูกค้า:</strong> <span id="customerRemarkText"></span>
+      </div>
+
       <div class="parcel-box mt-3" id="parcelBox">
         <div class="row align-items-center g-0">
           <div class="col-8 text-start pe-2" style="border-right: 1.5px solid var(--pink-light);">
@@ -1059,11 +1064,6 @@
 
       <!-- Status bar — full width ใต้ parcel box -->
       <div id="statusLabel" class="status-bar-full">รอเริ่มระบบ...</div>
-
-      <!-- Customer Remark Box — แสดงหมายเหตุลูกค้าจากไฟล์ Marketplace -->
-      <div id="customerRemarkBox" class="remark-display-box">
-        <span class="emoji-theme">📝</span> <strong>หมายเหตุลูกค้า:</strong> <span id="customerRemarkText"></span>
-      </div>
       
       <ul id="itemList" style="display:none;"></ul>
 
@@ -1348,6 +1348,7 @@ const colMappings = {
 // --- Variables ---
 let productMap = {}, currentP = "", items = [], scanner, searchScanner, lastScanTime = 0;
 let sessionParcels = {}, scanBuffer = [], bufferTimeout = null, isFinishing = false, isEditingId = false;
+let isSpeakingRemark = false; // ✅ ล็อคสแกนสินค้าระหว่างพูด remark
 let expectedItemsArray = [], scannedItemsMap = {}, isStrictValidationMode = false;
 let currentRemark = '';
 let orderRemarkMap = {}; // { trackingNo: remarkText } — หมายเหตุลูกค้าจากไฟล์ Marketplace 
@@ -1944,6 +1945,9 @@ function onScanBuffer(text, result) {
   const upperText = text.trim().toUpperCase();
   const isProduct = upperText.startsWith("B");
 
+  // ✅ ล็อคสแกนสินค้าระหว่างพูด remark
+  if (isProduct && isSpeakingRemark) return;
+
   // สำหรับสินค้า: ถ้า SKU นี้ยังต้องการอีก ลด cooldown เหลือ 800ms
   // สำหรับพัสดุ/อื่นๆ: คง cooldown 2500ms ป้องกัน double-scan
   let cooldown = 2500;
@@ -2456,19 +2460,26 @@ function hideCustomerRemark() {
 function _speakRemarkIfExists(tracking, delayMs = 1200) {
   try {
     const remark = _getRemarkForTracking(tracking);
-    if (!remark) return;
-    // ✅ รอให้พูดรหัสพัสดุเสร็จก่อน แล้วค่อยพูด remark
-    const doSpeak = () => speak('หมายเหตุลูกค้า ' + remark, false);
-    if (!window.speechSynthesis) return;
+    if (!remark || !window.speechSynthesis) return;
+
+    // ✅ รอให้พูดรหัสพัสดุเสร็จก่อน
     const trySpeak = () => {
       if (speechSynthesis.speaking || speechSynthesis.pending) {
         setTimeout(trySpeak, 200);
-      } else {
-        doSpeak();
+        return;
       }
+      // ✅ ล็อคสแกนสินค้าระหว่างพูด remark
+      isSpeakingRemark = true;
+
+      // พูด remark อย่างเดียว แล้วปลดล็อคทันที
+      const u1 = new SpeechSynthesisUtterance('หมายเหตุลูกค้า ' + remark);
+      u1.lang = 'th-TH'; u1.rate = 1.3;
+      u1.onend = () => { isSpeakingRemark = false; }; // ✅ ปลดล็อคหลังพูดจบ
+      speechSynthesis.speak(u1);
     };
+
     setTimeout(trySpeak, delayMs);
-  } catch(e) {}
+  } catch(e) { isSpeakingRemark = false; }
 }
 
 function resetRemark() {
