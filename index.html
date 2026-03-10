@@ -147,7 +147,8 @@
       cursor: pointer; font-family: 'Mitr', sans-serif;
       flex: 1;
     }
-    .tab-btn .tab-icon { font-size: 1.4rem; line-height: 1; transition: transform 0.2s; }
+    .tab-btn .tab-icon { font-size: 1.4rem; line-height: 1; transition: transform 0.2s; filter: sepia(0.4) saturate(1.2) hue-rotate(10deg) brightness(0.95); }
+    .tab-btn.active .tab-icon { filter: sepia(0.6) saturate(1.5) hue-rotate(5deg) brightness(1.05); }
     .tab-btn.active {
       background: var(--bg);
       color: var(--pink);
@@ -193,11 +194,25 @@
     }
     .btn-custom:active { box-shadow: inset 3px 3px 8px rgba(0,0,0,0.2), inset -2px -2px 5px rgba(255,255,255,0.1) !important; transform: scale(0.98); }
     .btn-main {
-      background: linear-gradient(135deg, #74b9ff, #0984e3);
-      color: white;
-      box-shadow: 6px 6px 14px rgba(9,132,227,0.35), -4px -4px 10px var(--sl);
+      background: linear-gradient(135deg, #e8d080, var(--pink), #a08030);
+      background-size: 200% 200%;
+      color: #3a2e10;
+      font-size: 1.15rem;
+      letter-spacing: 0.3px;
+      box-shadow: 6px 6px 18px rgba(200,168,75,0.45), -4px -4px 12px var(--sl),
+                  inset 0 1px 0 rgba(255,255,255,0.35);
+      animation: startBtnShimmer 3s ease-in-out infinite;
     }
-    .btn-main:hover { box-shadow: 8px 8px 18px rgba(9,132,227,0.4), -4px -4px 10px var(--sl); }
+    @keyframes startBtnShimmer {
+      0%,100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+    .btn-main:hover {
+      box-shadow: 8px 8px 22px rgba(200,168,75,0.6), -4px -4px 12px var(--sl),
+                  inset 0 1px 0 rgba(255,255,255,0.4);
+      transform: translateY(-1px);
+    }
+    html.dark-mode .btn-main { color: #fff8e0; box-shadow: 6px 6px 18px rgba(120,90,10,0.55), -4px -4px 12px var(--sl); }
     .btn-save {
       background: linear-gradient(135deg, var(--pink), #a08030);
       color: white;
@@ -293,7 +308,7 @@
       display: flex; gap: 10px; align-items: flex-start;
       box-shadow: 6px 6px 16px var(--sd), -6px -6px 16px var(--sl);
     }
-    .onboarding-tip .ob-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 1px; }
+    .onboarding-tip .ob-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 1px; filter: sepia(0.5) saturate(1.3) hue-rotate(8deg); }
     .onboarding-tip .ob-close {
       margin-left: auto; background: none; border: none;
       color: var(--text3); cursor: pointer; font-size: 1rem;
@@ -450,6 +465,28 @@
     .checklist-item.over    { background: #fff0f0; color: var(--danger); font-weight: 600; }
     .checklist-item .badge  { font-size: 0.65rem !important; padding: 2px 7px !important; }
 
+    /* ===== CUSTOMER REMARK DISPLAY BOX ===== */
+    .remark-display-box {
+      display: none;
+      background: #fef3c7;
+      border: 1.5px solid #f59e0b;
+      border-left: 5px solid #f59e0b;
+      border-radius: var(--radius-xs);
+      padding: 10px 14px;
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: #92400e;
+      font-family: 'Mitr', sans-serif;
+      line-height: 1.5;
+      box-shadow: 3px 3px 8px rgba(245,158,11,0.15);
+      animation: fadeInUp 0.3s ease both;
+    }
+    html.dark-mode .remark-display-box {
+      background: rgba(120,53,15,0.25) !important;
+      border-color: #b45309 !important;
+      color: #fcd34d !important;
+    }
+
     /* ===== REMARK PANEL ===== */
     .remark-panel {
       background: var(--bg);
@@ -582,7 +619,6 @@
     html.dark-mode .swal2-popup    { background: #252320 !important; color: #e8e4dc !important; }
     html.dark-mode .swal2-title,
     html.dark-mode .swal2-html-container { color: #e8e4dc !important; }
-    html.dark-mode #confirmSheet { background: #252320 !important; }
 
     /* ===== PARCEL INFO BOX ===== */
     .parcel-box {
@@ -634,6 +670,16 @@
       from { opacity: 0; transform: translateY(8px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+
+    /* ===== EMOJI THEME TINTING ===== */
+    /* ทำให้ emoji เข้าธีม gold/amber */
+    .emoji-theme { filter: sepia(0.45) saturate(1.3) hue-rotate(8deg) brightness(0.97); display: inline-block; }
+    .remark-btn { filter: sepia(0.3) saturate(1.2) hue-rotate(5deg); }
+    /* status emoji ใน setStatus */
+    .status-bar-inner .emoji-status { filter: sepia(0.5) saturate(1.4) hue-rotate(10deg); }
+    /* section icon */
+    .section-emoji { filter: sepia(0.4) saturate(1.3) hue-rotate(8deg); display: inline-block; margin-right: 3px; }
+
 
     /* === DASHBOARD === */
     .dash-presets { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -783,6 +829,7 @@
       padding: 9px 14px; font-size: 1rem; cursor: pointer;
       box-shadow: 4px 4px 10px var(--sd), -4px -4px 10px var(--sl);
       color: var(--text2); transition: all 0.15s; flex-shrink: 0;
+      filter: sepia(0.35) saturate(1.2) hue-rotate(8deg);
     }
     .btn-neu-icon:hover, .btn-neu-icon:active {
       box-shadow: inset 3px 3px 7px var(--sd), inset -3px -3px 7px var(--sl);
@@ -904,8 +951,8 @@
   </div>
   <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0;">
     <div style="display:flex; align-items:center; gap:6px;">
-      <button id="darkModeBtn" onclick="toggleDarkMode()" title="สลับธีม" style="font-size:1.1rem; padding:5px 7px;">🌙</button>
-      <span id="networkBadge" style="font-size:0.72rem; font-weight:600; padding:4px 10px; letter-spacing:0.2px; color:var(--success);">🟢 ออนไลน์</span>
+      <button id="darkModeBtn" onclick="toggleDarkMode()" title="สลับธีม" style="font-size:1.1rem; padding:5px 7px; filter:sepia(0.4) saturate(1.3) hue-rotate(8deg);">🌙</button>
+      <span id="networkBadge" style="font-size:0.72rem; font-weight:600; padding:4px 10px; letter-spacing:0.2px; color:var(--success); filter:sepia(0.3) saturate(1.2);">🟢 ออนไลน์</span>
     </div>
     <span id="syncTimeBadge" style="font-size:0.72rem; color:var(--text3);">—</span>
   </div>
@@ -951,7 +998,10 @@
         <button class="ob-close" onclick="dismissOnboarding()">✕</button>
       </div>
 
-      <button id="startBtn" onclick="initScanner()" class="btn-custom btn-main mb-3 w-100">🚀 เริ่มระบบสแกน</button>
+      <button id="startBtn" onclick="initScanner()" class="btn-custom btn-main mb-3 w-100">
+        <span style="font-size:1.5rem; display:block; margin-bottom:2px;">📦</span>
+        เริ่มระบบสแกน
+      </button>
       
       <div id="reader" style="display:none" class="scanner-wrap">
         <div class="scanner-viewfinder">
@@ -978,10 +1028,10 @@
         <div id="remarkPanel" class="remark-panel">
           <p class="mb-2 small fw-bold" style="color:var(--warning);">⚠ สินค้าไม่ครบ — เลือกเหตุผล</p>
           <div id="remarkButtons">
-            <button class="remark-btn" onclick="selectRemark(this, 'สินค้าหมด')">📦 สินค้าหมด</button>
-            <button class="remark-btn" onclick="selectRemark(this, 'ลูกค้าแจ้งเปลี่ยนสี')">🎨 เปลี่ยนสี</button>
-            <button class="remark-btn" onclick="selectRemark(this, 'ลูกค้าแจ้งเปลี่ยนรุ่น')">🔄 เปลี่ยนรุ่น</button>
-            <button class="remark-btn" onclick="selectRemark(this, 'อื่นๆ')">✏️ อื่นๆ</button>
+            <button class="remark-btn" onclick="selectRemark(this, 'สินค้าหมด')"><span class="section-emoji">📦</span> สินค้าหมด</button>
+            <button class="remark-btn" onclick="selectRemark(this, 'ลูกค้าแจ้งเปลี่ยนสี')"><span class="section-emoji">🎨</span> เปลี่ยนสี</button>
+            <button class="remark-btn" onclick="selectRemark(this, 'ลูกค้าแจ้งเปลี่ยนรุ่น')"><span class="section-emoji">🔄</span> เปลี่ยนรุ่น</button>
+            <button class="remark-btn" onclick="selectRemark(this, 'อื่นๆ')"><span class="section-emoji">✏️</span> อื่นๆ</button>
           </div>
           <div id="remarkOtherBox" style="display:none; margin-top:8px;">
             <input id="remarkOtherInput" class="form-control form-control-sm" placeholder="ระบุเหตุผล..." style="border-radius:10px;">
@@ -995,12 +1045,12 @@
       <div class="parcel-box mt-3" id="parcelBox">
         <div class="row align-items-center g-0">
           <div class="col-8 text-start pe-2" style="border-right: 1.5px solid var(--pink-light);">
-            <div class="section-title" style="margin-top:0; margin-bottom:2px; font-size:0.68rem;">📦 พัสดุปัจจุบัน</div>
+            <div class="section-title" style="margin-top:0; margin-bottom:2px; font-size:0.68rem;"><span class="section-emoji">📦</span> พัสดุปัจจุบัน</div>
             <div style="font-weight:700; color:var(--pink); font-size:0.85rem; letter-spacing:0.3px; word-break:break-all; line-height:1.3;" id="parcelId">-</div>
-            <button id="editParcelBtn" onclick="editParcelId()" class="btn btn-edit-inline mt-1" style="display:none; font-size:0.68rem; padding:2px 10px;">✏️ แก้รหัส</button>
+            <button id="editParcelBtn" onclick="editParcelId()" class="btn btn-edit-inline mt-1" style="display:none; font-size:0.68rem; padding:2px 10px;"><span class="section-emoji">✏️</span> แก้รหัส</button>
           </div>
           <div class="col-4 text-center ps-2">
-            <div class="section-title" style="margin-top:0; margin-bottom:1px; font-size:0.68rem;">🛍 สินค้า</div>
+            <div class="section-title" style="margin-top:0; margin-bottom:1px; font-size:0.68rem;"><span class="section-emoji">🛍</span> สินค้า</div>
             <div id="count" style="font-size:1.8rem; font-weight:700; color:var(--pink); line-height:1;">0</div>
             <div style="font-size:0.68rem; color:var(--text3);">ชิ้น</div>
           </div>
@@ -1009,16 +1059,21 @@
 
       <!-- Status bar — full width ใต้ parcel box -->
       <div id="statusLabel" class="status-bar-full">รอเริ่มระบบ...</div>
+
+      <!-- Customer Remark Box — แสดงหมายเหตุลูกค้าจากไฟล์ Marketplace -->
+      <div id="customerRemarkBox" class="remark-display-box">
+        <span class="emoji-theme">📝</span> <strong>หมายเหตุลูกค้า:</strong> <span id="customerRemarkText"></span>
+      </div>
       
       <ul id="itemList" style="display:none;"></ul>
 
-      <button id="refreshCacheBtn" onclick="refreshAllCache()" class="btn-neu-sm mb-2 w-100 mt-3" style="display:none; font-size:0.88rem; padding:9px;">🔄 ดึงข้อมูลล่าสุด (สินค้า & ออเดอร์)</button>
+      <button id="refreshCacheBtn" onclick="refreshAllCache()" class="btn-neu-sm mb-2 w-100 mt-3" style="display:none; font-size:0.88rem; padding:9px;"><span class="section-emoji">🔄</span> ดึงข้อมูลล่าสุด (สินค้า & ออเดอร์)</button>
       
       <!-- Fix 6: sticky action bar ไม่ถูก nav บัง + Fix 1: col-7/col-5 -->
       <div id="action-buttons" class="action-bar-sticky" style="display:none">
         <div class="row g-2">
           <div class="col-7">
-            <button id="saveBtn" onclick="finishWork(true)" class="btn-custom btn-save w-100">💾 บันทึกและจบงาน</button>
+            <button id="saveBtn" onclick="finishWork(true)" class="btn-custom btn-save w-100"><span class="section-emoji">💾</span> บันทึกและจบงาน</button>
           </div>
           <div class="col-5">
             <button id="cancelBtn" onclick="cancelWork()" class="btn-custom btn-cancel w-100">✖ ยกเลิก</button>
@@ -1042,7 +1097,7 @@
           <button class="btn-neu-icon" onclick="startSearchScan()" title="สแกนด้วยกล้อง">📷</button>
           <button class="btn-neu-gold" onclick="runSearch()" style="padding:9px 18px; font-size:0.9rem;">ค้นหา</button>
         </div>
-        <div class="form-text text-muted ms-2 small">💡 ค้นหาได้ทั้งตัวพิมพ์เล็กและใหญ่</div>
+        <div class="form-text text-muted ms-2 small"><span class="section-emoji">💡</span> ค้นหาได้ทั้งตัวพิมพ์เล็กและใหญ่</div>
       </div>
       <!-- ข้อ 1: Skeleton loader -->
       <div id="loadingSearch" style="display:none">
@@ -1137,7 +1192,7 @@
       </div>
       <!-- Top Products Table -->
       <div class="dash-table-card">
-        <h6 class="fw-bold mb-3" style="color:var(--pink);">🏆 สินค้าขายดี</h6>
+        <h6 class="fw-bold mb-3" style="color:var(--pink);"><span class="section-emoji">🏆</span> สินค้าขายดี</h6>
         <div id="dashProductTable">
           <div class="text-center text-muted small py-3">กดค้นหาเพื่อดูข้อมูลค่ะ 🐱</div>
         </div>
@@ -1145,7 +1200,7 @@
       <!-- Session Log -->
       <div class="dash-table-card mt-3">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <h6 class="fw-bold mb-0" style="color:var(--pink);">📋 แพ็กไปแล้ว (รอบนี้)</h6>
+          <h6 class="fw-bold mb-0" style="color:var(--pink);"><span class="section-emoji">📋</span> แพ็กไปแล้ว (รอบนี้)</h6>
           <div style="display:flex; gap:6px; align-items:center;">
             <span id="sessionLogCount" style="font-size:0.72rem; color:var(--text3);">0 ใบ</span>
             <button onclick="exportSessionCSV()" class="btn-neu-sm" style="font-size:0.72rem; padding:3px 10px;">⬇ CSV</button>
@@ -1246,18 +1301,6 @@
   </div>
 </div>
 
-<!-- Confirm Bottom Sheet -->
-<div id="confirmSheet" style="
-  position:fixed; bottom:0; left:0; right:0; z-index:1100;
-  background:var(--bg); border-radius:24px 24px 0 0;
-  padding:16px 20px 28px; box-shadow:0 -6px 20px var(--sd), 0 -1px 0 var(--sl);
-  transform:translateY(100%); transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);">
-  <div style="width:40px; height:4px; background:var(--pink-light); border-radius:4px; margin:0 auto 12px;"></div>
-  <div style="font-size:0.9rem; font-weight:700; color:var(--success); margin-bottom:6px;">✅ บันทึกเรียบร้อย</div>
-  <div id="confirmSheetBody" style="font-size:0.82rem; color:var(--text2); line-height:1.7;"></div>
-  <div style="font-size:0.72rem; color:var(--text3); margin-top:8px;">สแกนพัสดุใบถัดไปเพื่อปิด</div>
-</div>
-
 <!-- Undo Toast -->
 <div id="undoToast" style="
   position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
@@ -1309,17 +1352,18 @@ function selectMarketplace(value, el) {
 }
 
 const colMappings = {
-  'tiktok':  { tracking: 35, sku: 6,  qty: 9,  headerRows: 1 }, 
-  'shopee':  { tracking: 13, sku: 18, qty: 22, headerRows: 1 }, 
-  'lazada':  { tracking: 58, sku: 5,  qty: -1, headerRows: 1 }, 
-  'page365': { tracking: 11, sku: 24, qty: 28, headerRows: 1, isCsv: true } 
+  'tiktok':  { tracking: 35, sku: 6,  qty: 9,  remark: 52,       headerRows: 1 },
+  'shopee':  { tracking: 13, sku: 18, qty: 22, remark: [49, 57], headerRows: 1 },
+  'lazada':  { tracking: 58, sku: 5,  qty: -1, remark: 75,       headerRows: 1 },
+  'page365': { tracking: 11, sku: 24, qty: 28, remark: 22,       headerRows: 1, isCsv: true }
 };
 
 // --- Variables ---
 let productMap = {}, currentP = "", items = [], scanner, searchScanner, lastScanTime = 0;
 let sessionParcels = {}, scanBuffer = [], bufferTimeout = null, isFinishing = false, isEditingId = false;
 let expectedItemsArray = [], scannedItemsMap = {}, isStrictValidationMode = false;
-let currentRemark = ''; 
+let currentRemark = '';
+let orderRemarkMap = {}; // { trackingNo: remarkText } — หมายเหตุลูกค้าจากไฟล์ Marketplace 
 let mediaRecorder, recordedChunks = [], cameraStream = null, isRecording = false;
 
 // --- Inactivity Alert ---
@@ -2037,7 +2081,10 @@ async function processFinalScan(text) {
 
 function setStatus(msg, type) {
   const el = document.getElementById("statusLabel");
-  el.innerText = msg;
+  // wrap leading emoji with theme filter
+  const themed = msg.replace(/^([\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}✅❌⚠️✏️📦🛍💾🔄💡📝]+\s*)/u,
+    '<span style="filter:sepia(0.5) saturate(1.4) hue-rotate(8deg);display:inline-block;">$1</span>');
+  el.innerHTML = themed;
   const map = { success: "bg-success", danger: "bg-danger", warning: "bg-warning", primary: "bg-primary", info: "bg-info", secondary: "bg-secondary" };
   el.className = "status-bar-full " + (map[type] || "bg-light text-muted");
 }
@@ -2045,6 +2092,7 @@ function setStatus(msg, type) {
 function editParcelId() {
   speak("เตรียมสแกนรหัสพัสดุที่ถูกต้องนะคะ");
   isEditingId = true; currentP = "";
+  hideCustomerRemark();
   document.getElementById("parcelId").innerText = "รอสแกนรหัสใหม่...";
   setStatus("✏️ กำลังแก้ไขรหัสพัสดุ...", "info");
   document.getElementById("editParcelBtn").style.display = "none";
@@ -2052,7 +2100,6 @@ function editParcelId() {
 
 function processNewParcel(text, carrier) {
   const wasEditing = isEditingId;
-  closeConfirmSheet(); // ปิด summary sheet เมื่อสแกนพัสดุใหม่
   currentP = text;
   if (!wasEditing) items = [];
   isEditingId = false;
@@ -2064,15 +2111,18 @@ function processNewParcel(text, carrier) {
   // Flash animation บน parcel box
   const box = document.getElementById('parcelBox');
   if (box) { box.classList.remove('flash-new'); void box.offsetWidth; box.classList.add('flash-new'); }
+  showCustomerRemark(text);
   const lastFour = text.length >= 4 ? text.slice(-4) : text;
   if (wasEditing) {
     speak(`แก้ไขเป็นรหัส ${lastFour.split('').join(' ')} เรียบร้อยค่ะ`);
+    _speakRemarkIfExists(text, 1000);
     expectedItemsArray = []; scannedItemsMap = {}; isStrictValidationMode = false;
     resetRemark();
     document.getElementById("orderChecklistPanel").style.display = "none";
     checkExpectedItems(text);
   } else {
     speak(`พัสดุ ${carrier} ใหม่ ลงท้ายด้วย ${lastFour.split('').join(' ')}`);
+    _speakRemarkIfExists(text, 1200);
     stopCameraRecording().then(() => startCameraRecording()); // หยุดกล้องเก่าก่อนเปิดใหม่เสมอ
     checkExpectedItems(text);
   }
@@ -2087,34 +2137,6 @@ async function cancelWork() {
   await closeAppCompletely();
   isFinishing = false;
   setStatus("✖ ยกเลิกงานเรียบร้อย", "secondary");
-}
-
-let _pendingFinishManual = false;
-
-async function showConfirmSheet(isManual) {
-  _pendingFinishManual = isManual;
-  const unknownCount = items.filter(c => !productMap[c]).length;
-  const unknownWarning = unknownCount > 0
-    ? `<div style="margin-top:6px; color:#e17055; font-size:0.78rem;">⚠️ มีสินค้าไม่รู้จัก ${unknownCount} ชิ้น</div>`
-    : '';
-  document.getElementById('confirmSheetBody').innerHTML = `
-    <div>📬 <strong>พัสดุ:</strong> ${escHtml(currentP)}</div>
-    <div>🛍 <strong>สินค้า:</strong> ${items.length} ชิ้น</div>
-    ${currentRemark ? `<div>📝 <strong>หมายเหตุ:</strong> ${escHtml(currentRemark)}</div>` : ''}
-    ${unknownWarning}
-  `;
-  document.getElementById('confirmSheet').style.transform = 'translateY(0)';
-  // บันทึกทันที ไม่รอกดปุ่ม
-  await _doFinishWork(isManual);
-}
-
-function closeConfirmSheet() {
-  document.getElementById('confirmSheet').style.transform = 'translateY(100%)';
-}
-
-async function confirmFinish() {
-  closeConfirmSheet();
-  await _doFinishWork(_pendingFinishManual);
 }
 
 async function finishWork(isManual = false) {
@@ -2133,7 +2155,7 @@ async function finishWork(isManual = false) {
     // ไม่ครบ — กดปุ่มเองได้ ใส่ remark อัตโนมัติ
     if (!currentRemark) currentRemark = 'สินค้าไม่ครบ';
   }
-  showConfirmSheet(isManual);
+  await _doFinishWork(isManual);
 }
 
 async function _doFinishWork(isManual = false) {
@@ -2212,6 +2234,7 @@ async function resetAppForNext() {
   currentP = ""; items = []; isEditingId = false;
   expectedItemsArray = []; scannedItemsMap = {}; isStrictValidationMode = false;
   resetRemark();
+  hideCustomerRemark();
   document.getElementById("orderChecklistPanel").style.display = "none";
   const pw = document.getElementById('checklistProgressWrap');
   if (pw) pw.style.display = 'none';
@@ -2235,6 +2258,7 @@ async function closeAppCompletely() {
   currentP = ""; items = []; isEditingId = false;
   expectedItemsArray = []; scannedItemsMap = {}; isStrictValidationMode = false;
   resetRemark();
+  hideCustomerRemark();
   document.getElementById("orderChecklistPanel").style.display = "none";
   document.getElementById("reader").style.display = "none";
   document.getElementById("parcelId").innerText = "-";
@@ -2394,6 +2418,38 @@ async function confirmRemarkAndFinish() {
   await finishWork(false);
 }
 
+// ===== CUSTOMER REMARK FUNCTIONS =====
+function showCustomerRemark(tracking) {
+  try {
+    const stored = JSON.parse(localStorage.getItem('orderRemarkMap') || '{}');
+    const remark = stored[tracking] || stored[tracking.toUpperCase()] || '';
+    const box = document.getElementById('customerRemarkBox');
+    const txt = document.getElementById('customerRemarkText');
+    if (!box || !txt) return;
+    if (remark) {
+      txt.textContent = remark;
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+  } catch(e) { console.warn('[Remark]', e); }
+}
+
+function hideCustomerRemark() {
+  const box = document.getElementById('customerRemarkBox');
+  if (box) box.style.display = 'none';
+}
+
+function _speakRemarkIfExists(tracking, delayMs = 1200) {
+  try {
+    const stored = JSON.parse(localStorage.getItem('orderRemarkMap') || '{}');
+    const remark = stored[tracking] || stored[tracking.toUpperCase()] || '';
+    if (remark) {
+      setTimeout(() => speak('หมายเหตุลูกค้า ' + remark, false), delayMs);
+    }
+  } catch(e) {}
+}
+
 function resetRemark() {
   currentRemark = '';
   document.querySelectorAll('.remark-btn').forEach(b => b.classList.remove('selected'));
@@ -2511,6 +2567,7 @@ async function processFileUpload() {
   // --- อ่านไฟล์และ preview ก่อนส่ง ---
   Swal.fire({ title: 'กำลังอ่านไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
   let extractData = [];
+  const remarkMap = {}; // { trackingNo: remarkText }
   try {
     let rows = [];
     if (map.isCsv) {
@@ -2533,6 +2590,11 @@ async function processFileUpload() {
         if (!tracking || !sku || tracking === 'UNDEFINED' || sku === 'UNDEFINED') continue;
         const key = tracking + '|' + sku;
         trackingMap[key] = (trackingMap[key] || 0) + 1;
+        // ดึง remark (Lazada: column BX = index 75)
+        if (map.remark !== undefined && !remarkMap[tracking]) {
+          const rv = String(row[map.remark] || '').trim();
+          if (rv) remarkMap[tracking] = rv;
+        }
       }
       for (const key in trackingMap) {
         const [tracking, sku] = key.split('|');
@@ -2547,8 +2609,28 @@ async function processFileUpload() {
         if (!tracking || !sku || tracking === 'UNDEFINED' || sku === 'UNDEFINED') continue;
         if (tracking.length < 5 || tracking.includes(' ')) continue;
         extractData.push({ marketplace, tracking, sku, qty });
+        // ดึง remark (Shopee: [49, 57], TikTok: 52, Page365: 22)
+        if (!remarkMap[tracking] && map.remark !== undefined) {
+          let rv = '';
+          if (Array.isArray(map.remark)) {
+            // Shopee — รวมหลาย column
+            rv = map.remark.map(ci => String(row[ci] || '').trim()).filter(Boolean).join(' | ');
+          } else {
+            rv = String(row[map.remark] || '').trim();
+          }
+          if (rv) remarkMap[tracking] = rv;
+        }
       }
     }
+
+    // บันทึก remarkMap ลง localStorage (merge กับข้อมูลเดิม)
+    try {
+      const existing = JSON.parse(localStorage.getItem('orderRemarkMap') || '{}');
+      const merged = { ...existing, ...remarkMap };
+      localStorage.setItem('orderRemarkMap', JSON.stringify(merged));
+      console.log(`[Remark] บันทึก ${Object.keys(remarkMap).length} หมายเหตุลูกค้า`);
+    } catch(e) { console.warn('[Remark] บันทึก localStorage ไม่ได้:', e.message); }
+
     Swal.close();
   } catch (err) {
     Swal.fire('ข้อผิดพลาด', 'อ่านไฟล์ไม่ได้: ' + err.message, 'error');
@@ -2568,6 +2650,7 @@ async function processFileUpload() {
       <div style="text-align:left; font-size:0.9rem; color:#5a3e4b; line-height:1.8;">
         <div>📦 พัสดุ: <strong>${uniqueTracking} ใบ</strong></div>
         <div>🛍️ รายการสินค้า: <strong>${extractData.length} รายการ</strong></div>
+        <div>📝 หมายเหตุลูกค้า: <strong>${Object.keys(remarkMap).length} ใบ</strong></div>
         <div>🏪 Marketplace: <strong>${escHtml(marketplace)}</strong></div>
         <div>📄 ไฟล์: <strong>${escHtml(file.name)}</strong></div>
       </div>`,
