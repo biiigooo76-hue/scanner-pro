@@ -2456,9 +2456,18 @@ function hideCustomerRemark() {
 function _speakRemarkIfExists(tracking, delayMs = 1200) {
   try {
     const remark = _getRemarkForTracking(tracking);
-    if (remark) {
-      setTimeout(() => speak('หมายเหตุลูกค้า ' + remark, false), delayMs);
-    }
+    if (!remark) return;
+    // ✅ รอให้พูดรหัสพัสดุเสร็จก่อน แล้วค่อยพูด remark
+    const doSpeak = () => speak('หมายเหตุลูกค้า ' + remark, false);
+    if (!window.speechSynthesis) return;
+    const trySpeak = () => {
+      if (speechSynthesis.speaking || speechSynthesis.pending) {
+        setTimeout(trySpeak, 200);
+      } else {
+        doSpeak();
+      }
+    };
+    setTimeout(trySpeak, delayMs);
   } catch(e) {}
 }
 
