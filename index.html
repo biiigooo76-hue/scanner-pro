@@ -1031,6 +1031,7 @@
             <button class="remark-btn" onclick="selectRemark(this, 'สินค้าหมด')"><span class="section-emoji">📦</span> สินค้าหมด</button>
             <button class="remark-btn" onclick="selectRemark(this, 'ลูกค้าแจ้งเปลี่ยนสี')"><span class="section-emoji">🎨</span> เปลี่ยนสี</button>
             <button class="remark-btn" onclick="selectRemark(this, 'ลูกค้าแจ้งเปลี่ยนรุ่น')"><span class="section-emoji">🔄</span> เปลี่ยนรุ่น</button>
+            <button class="remark-btn" onclick="selectRemark(this, 'ใช้พัสดุเดิม')"><span class="section-emoji">📬</span> ใช้พัสดุเดิม</button>
             <button class="remark-btn" onclick="selectRemark(this, 'อื่นๆ')"><span class="section-emoji">✏️</span> อื่นๆ</button>
           </div>
           <div id="remarkOtherBox" style="display:none; margin-top:8px;">
@@ -2387,7 +2388,7 @@ async function checkExpectedItems(tracking) {
       items.forEach(sku => { scannedItemsMap[sku] = (scannedItemsMap[sku] || 0) + 1; });
       document.getElementById("orderChecklistPanel").style.display = "block";
       updateChecklistUI();
-      speak("กรุณาสแกนสินค้าให้ครบตามรายการในระบบค่ะ", false);
+      // ✅ ไม่พูดที่นี่ — _speakRemarkIfExists จะพูด remark ก่อน แล้ว chain มาพูด "กรุณาสแกน..." เอง
     } else {
       isStrictValidationMode = false; expectedItemsArray = []; scannedItemsMap = {};
     }
@@ -2460,22 +2461,22 @@ function hideCustomerRemark() {
 function _speakRemarkIfExists(tracking, delayMs = 1200) {
   try {
     const remark = _getRemarkForTracking(tracking);
-    if (!remark || !window.speechSynthesis) return;
+    if (!window.speechSynthesis) return;
 
-    // ✅ รอให้พูดรหัสพัสดุเสร็จก่อน
     const trySpeak = () => {
       if (speechSynthesis.speaking || speechSynthesis.pending) {
         setTimeout(trySpeak, 200);
         return;
       }
-      // ✅ ล็อคสแกนสินค้าระหว่างพูด remark
-      isSpeakingRemark = true;
 
-      // พูด remark อย่างเดียว แล้วปลดล็อคทันที
-      const u1 = new SpeechSynthesisUtterance('หมายเหตุลูกค้า ' + remark);
-      u1.lang = 'th-TH'; u1.rate = 1.3;
-      u1.onend = () => { isSpeakingRemark = false; }; // ✅ ปลดล็อคหลังพูดจบ
-      speechSynthesis.speak(u1);
+      if (remark) {
+        // ✅ มี remark: ล็อคสแกน → พูด remark → ปลดล็อค
+        isSpeakingRemark = true;
+        const u1 = new SpeechSynthesisUtterance('หมายเหตุลูกค้า ' + remark);
+        u1.lang = 'th-TH'; u1.rate = 1.3;
+        u1.onend = () => { isSpeakingRemark = false; };
+        speechSynthesis.speak(u1);
+      }
     };
 
     setTimeout(trySpeak, delayMs);
