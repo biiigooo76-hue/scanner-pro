@@ -893,6 +893,45 @@
     html.dark-mode .input-neu-wrap input { color: #e8e4dc; }
     html.dark-mode .btn-neu-icon { color: #b0a890; }
     html.dark-mode .btn-neu-sm { background: #2c2a25 !important; }
+
+    /* ===== SWAL REMARK POPUP ===== */
+    .swal-remark-popup {
+      border-radius: var(--radius) !important;
+      font-family: 'Mitr', sans-serif !important;
+    }
+    .swal-remark-btn {
+      display: block; width: 100%;
+      padding: 12px 16px;
+      font-size: 0.95rem; font-weight: 500;
+      font-family: 'Mitr', sans-serif;
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+    .swal-remark-btn:hover {
+      border-color: var(--pink-light);
+      background: #faf6eb;
+    }
+    .swal-remark-btn.swal-remark-selected {
+      border-color: var(--pink);
+      background: linear-gradient(135deg, #fdf6e3, #f5ecd0);
+      color: var(--pink);
+      font-weight: 600;
+      box-shadow: 0 0 0 3px rgba(200,168,75,0.2);
+    }
+    html.dark-mode .swal-remark-btn {
+      background: #2c2a25; border-color: #4a4535; color: #e8e4dc;
+    }
+    html.dark-mode .swal-remark-btn:hover {
+      border-color: #8a7840; background: #3a3525;
+    }
+    html.dark-mode .swal-remark-btn.swal-remark-selected {
+      border-color: var(--pink); background: #3a3020; color: #e0c860;
+    }
   </style>
 </head>
 <body>
@@ -2157,8 +2196,15 @@ async function finishWork(isManual = false) {
       beep('warn'); speak("มีสินค้าเกินจำนวนค่ะ กรุณาลบออกก่อน", false);
       setStatus("❌ สินค้าเกินจำนวน — กรุณาลบออกก่อนจบงาน", "danger"); return;
     }
-    // ไม่ครบ — กดปุ่มเองได้ ใส่ remark อัตโนมัติ
-    if (!currentRemark) currentRemark = 'สินค้าไม่ครบ';
+    // ไม่ครบ — เปิด Popup ให้ผู้ใช้เลือกเหตุผลก่อนจบงาน
+    if (!currentRemark) {
+      beep('warn');
+      speak("สินค้าไม่ครบค่ะ กรุณาเลือกเหตุผลก่อนจบงาน", false);
+      setStatus("⚠️ สินค้าไม่ครบ — กรุณาเลือกเหตุผลก่อนจบงาน", "warning");
+      const remarkResult = await showRemarkPopup();
+      if (!remarkResult) return; // ผู้ใช้กดยกเลิก
+      currentRemark = remarkResult;
+    }
   }
   await _doFinishWork(isManual);
 }
@@ -2481,6 +2527,76 @@ function _speakRemarkIfExists(tracking, delayMs = 1200) {
 
     setTimeout(trySpeak, delayMs);
   } catch(e) { isSpeakingRemark = false; }
+}
+
+async function showRemarkPopup() {
+  const reasons = [
+    { emoji: '📦', label: 'สินค้าหมด' },
+    { emoji: '🎨', label: 'ลูกค้าแจ้งเปลี่ยนสี' },
+    { emoji: '🔄', label: 'ลูกค้าแจ้งเปลี่ยนรุ่น' },
+    { emoji: '📬', label: 'ใช้พัสดุเดิม' },
+    { emoji: '✏️', label: 'อื่นๆ' }
+  ];
+  const buttonsHtml = reasons.map(r =>
+    `<button type="button" class="swal-remark-btn" data-value="${r.label}">${r.emoji} ${r.label}</button>`
+  ).join('');
+
+  const { value } = await Swal.fire({
+    title: '⚠️ สินค้าไม่ครบ',
+    html: `
+      <p style="font-size:0.9rem; color:#92400e; margin-bottom:12px;">กรุณาเลือกเหตุผลก่อนจบงาน</p>
+      <div id="swalRemarkBtns" style="display:flex; flex-direction:column; gap:8px;">${buttonsHtml}</div>
+      <input id="swalRemarkOther" class="swal2-input" placeholder="ระบุเหตุผล..." style="display:none; margin-top:10px; font-size:0.9rem; border-radius:12px;">
+    `,
+    showConfirmButton: true,
+    confirmButtonText: '💾 บันทึกพร้อมหมายเหตุ',
+    confirmButtonColor: '#c8a84b',
+    showCancelButton: true,
+    cancelButtonText: 'ยกเลิก',
+    allowOutsideClick: false,
+    customClass: { popup: 'swal-remark-popup' },
+    didOpen: () => {
+      const popup = Swal.getPopup();
+      let selected = '';
+      popup.querySelectorAll('.swal-remark-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          popup.querySelectorAll('.swal-remark-btn').forEach(b => b.classList.remove('swal-remark-selected'));
+          btn.classList.add('swal-remark-selected');
+          selected = btn.dataset.value;
+          const otherInput = popup.querySelector('#swalRemarkOther');
+          if (selected === 'อื่นๆ') {
+            otherInput.style.display = 'block';
+            otherInput.focus();
+          } else {
+            otherInput.style.display = 'none';
+          }
+        });
+      });
+    },
+    preConfirm: () => {
+      const popup = Swal.getPopup();
+      const selectedBtn = popup.querySelector('.swal-remark-btn.swal-remark-selected');
+      if (!selectedBtn) {
+        Swal.showValidationMessage('กรุณาเลือกเหตุผลก่อนค่ะ');
+        return false;
+      }
+      let reason = selectedBtn.dataset.value;
+      if (reason === 'อื่นๆ') {
+        const otherVal = popup.querySelector('#swalRemarkOther').value.trim();
+        if (!otherVal) {
+          Swal.showValidationMessage('กรุณาระบุเหตุผลด้วยค่ะ');
+          return false;
+        }
+        reason = otherVal;
+      }
+      return reason;
+    }
+  });
+
+  if (value) {
+    speak(`บันทึกพร้อมหมายเหตุ ${value} ค่ะ`, false);
+  }
+  return value || null;
 }
 
 function resetRemark() {
