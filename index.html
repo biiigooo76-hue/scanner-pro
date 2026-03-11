@@ -2186,6 +2186,8 @@ async function cancelWork() {
 async function finishWork(isManual = false) {
   const pId = currentP;
   if (!pId) { if (isManual) speak("กรุณาสแกนรหัสพัสดุก่อนนะคะ"); return; }
+
+  // ===== ตรวจสอบ strict mode: สินค้าเกิน → บล็อก =====
   if (isStrictValidationMode && !validateCurrentOrder()) {
     let hasOver = false;
     for (let sSku in scannedItemsMap) {
@@ -2196,16 +2198,21 @@ async function finishWork(isManual = false) {
       beep('warn'); speak("มีสินค้าเกินจำนวนค่ะ กรุณาลบออกก่อน", false);
       setStatus("❌ สินค้าเกินจำนวน — กรุณาลบออกก่อนจบงาน", "danger"); return;
     }
-    // ไม่ครบ — เปิด Popup ให้ผู้ใช้เลือกเหตุผลก่อนจบงาน
-    if (!currentRemark) {
-      beep('warn');
-      speak("สินค้าไม่ครบค่ะ กรุณาเลือกเหตุผลก่อนจบงาน", false);
-      setStatus("⚠️ สินค้าไม่ครบ — กรุณาเลือกเหตุผลก่อนจบงาน", "warning");
-      const remarkResult = await showRemarkPopup();
-      if (!remarkResult) return; // ผู้ใช้กดยกเลิก
-      currentRemark = remarkResult;
-    }
   }
+
+  // ===== ถ้าสินค้าไม่ครบ (strict mode ไม่ผ่าน หรือ ไม่มีสินค้าเลย) → เด้ง popup เลือกเหตุผล =====
+  const isIncomplete = isStrictValidationMode && !validateCurrentOrder();
+  const isEmpty = isManual && items.length === 0;
+  if ((isIncomplete || isEmpty) && !currentRemark) {
+    beep('warn');
+    const msg = isEmpty ? "ยังไม่มีสินค้าในกล่องค่ะ" : "สินค้าไม่ครบค่ะ";
+    speak(msg + " กรุณาเลือกเหตุผลก่อนจบงาน", false);
+    setStatus("⚠️ " + msg + " — กรุณาเลือกเหตุผลก่อนจบงาน", "warning");
+    const remarkResult = await showRemarkPopup();
+    if (!remarkResult) return; // ผู้ใช้กดยกเลิก
+    currentRemark = remarkResult;
+  }
+
   await _doFinishWork(isManual);
 }
 
