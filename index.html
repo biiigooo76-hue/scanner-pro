@@ -1379,11 +1379,85 @@ function selectMarketplace(value, el) {
 }
 
 const colMappings = {
-  'tiktok':  { tracking: 34, sku: 6,  qty: 9,  remark: [37, 52], headerRows: 2, headerDetect: true },
+  'tiktok':  { tracking: 34, sku: 6,  qty: 9,  remark: [37, 52], headerRows: 2 },
   'shopee':  { tracking: 13, sku: 18, qty: 22, remark: [49, 57], headerRows: 1 },
   'lazada':  { tracking: 58, sku: 5,  qty: -1, remark: 75,       headerRows: 1 },
-  'page365': { tracking: 11, sku: 24, qty: 28, remark: 22,       headerRows: 1, isCsv: true }
+  'page365': { tracking: 11, sku: 24, qty: 28, remark: [22, 31], headerRows: 1, isCsv: true }
 };
+
+// ===== AUTO-DETECT COLUMN POSITIONS =====
+// อ่านชื่อ header จริงจากไฟล์ → หาตำแหน่ง column อัตโนมัติ
+// ป้องกันปัญหา marketplace เปลี่ยน column ในอนาคต
+const headerKeywords = {
+  'tiktok': {
+    tracking: ['tracking id'],
+    sku:      ['seller sku'],
+    qty:      ['quantity'],
+    remarkBuyer:  ['buyer message'],
+    remarkSeller: ['seller note']
+  },
+  'shopee': {
+    tracking: ['หมายเลขติดตามพัสดุ', 'tracking'],
+    sku:      ['เลขอ้างอิง sku', 'sku reference'],
+    qty:      ['จำนวน', 'quantity'],
+    remarkBuyer:  ['หมายเหตุจากผู้ซื้อ', 'buyer remark', 'buyer note'],
+    remarkSeller: ['บันทึก']
+  },
+  'lazada': {
+    tracking: ['trackingcode', 'tracking code'],
+    sku:      ['sellersku', 'seller sku'],
+    remarkSeller: ['sellernote', 'seller note']
+  },
+  'page365': {
+    tracking: ['tracking number'],
+    sku:      ['sku'],
+    qty:      ['item qty'],
+    remarkBuyer:  ['note'],
+    remarkSeller: ['item note']
+  }
+};
+
+function autoDetectColumns(marketplace, headerRow) {
+  const kw = headerKeywords[marketplace];
+  if (!kw || !headerRow) return null;
+  const headers = headerRow.map(h => String(h || '').trim().toLowerCase());
+
+  const findCol = (keywords) => {
+    if (!keywords) return -1;
+    for (const k of keywords) {
+      const idx = headers.findIndex(h => h === k || h.includes(k));
+      if (idx >= 0) return idx;
+    }
+    return -1;
+  };
+
+  const detected = {};
+  const dTracking = findCol(kw.tracking);
+  const dSku = findCol(kw.sku);
+  const dQty = kw.qty ? findCol(kw.qty) : -1;
+  const dRemarkBuyer = findCol(kw.remarkBuyer);
+  const dRemarkSeller = findCol(kw.remarkSeller);
+
+  if (dTracking >= 0) detected.tracking = dTracking;
+  if (dSku >= 0) detected.sku = dSku;
+  if (dQty >= 0) detected.qty = dQty;
+
+  // รวม remark columns ที่เจอ
+  const remarkCols = [dRemarkBuyer, dRemarkSeller].filter(c => c >= 0);
+  if (remarkCols.length === 1) detected.remark = remarkCols[0];
+  else if (remarkCols.length > 1) detected.remark = remarkCols;
+
+  // ตรวจจับ headerRows (description rows) สำหรับ TikTok
+  if (marketplace === 'tiktok') {
+    detected.headerRows = 1; // default
+    for (let r = 1; r < Math.min(5, 999); r++) { // จะถูกเรียกจาก processFileUpload ที่มี rows
+      break; // placeholder — headerRows detection อยู่ใน processFileUpload
+    }
+  }
+
+  console.log(`[Auto-Detect ${marketplace}]`, JSON.stringify(detected));
+  return detected;
+}
 
 // --- Variables ---
 let productMap = {}, currentP = "", items = [], scanner, searchScanner, lastScanTime = 0;
@@ -2736,68 +2810,45 @@ async function processFileUpload() {
       rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, raw: false });
     }
 
-    // ===== AUTO-DETECT COLUMN POSITIONS (TikTok) =====
-    // หา column จาก header จริง — กันปัญหา TikTok เปลี่ยน column ในอนาคต
-    const tiktokHeaderMap = {
-      tracking: ['tracking id', 'tracking_id'],
-      sku:      ['seller sku', 'seller_sku', 'sku id'],
-      qty:      ['quantity'],
-      remark:   { buyerMsg: ['buyer message', 'buyer_message'], sellerNote: ['seller note', 'seller_note'] }
-    };
-    let effectiveMap = { ...map };
-    if (marketplace === 'tiktok' && rows.length > 0) {
-      const headerRow = rows[0];
-      if (headerRow) {
-        const headers = headerRow.map(h => String(h || '').trim().toLowerCase());
-        // detect header row count (skip description rows)
-        let detectedStartRow = 1;
-        for (let r = 1; r < Math.min(5, rows.length); r++) {
-          const cell = String(rows[r]?.[0] || '').trim().toLowerCase();
-          // description rows มักมีคำอธิบายยาว หรือไม่ใช่ตัวเลข/Order ID
-          if (cell.includes('order') || cell.includes('platform') || cell.includes('the ') || cell.length > 30) {
-            detectedStartRow = r + 1;
-          } else break;
-        }
-        // detect column indexes
-        const findCol = (keywords) => {
-          for (const kw of keywords) {
-            const idx = headers.findIndex(h => h === kw || h.includes(kw));
-            if (idx >= 0) return idx;
-          }
-          return -1;
-        };
-        const dTracking = findCol(tiktokHeaderMap.tracking);
-        const dSku = findCol(tiktokHeaderMap.sku);
-        const dQty = findCol(tiktokHeaderMap.qty);
-        const dBuyerMsg = findCol(tiktokHeaderMap.remark.buyerMsg);
-        const dSellerNote = findCol(tiktokHeaderMap.remark.sellerNote);
-
-        if (dTracking >= 0) effectiveMap.tracking = dTracking;
-        if (dSku >= 0) effectiveMap.sku = dSku;
-        if (dQty >= 0) effectiveMap.qty = dQty;
-        // รวม remark columns ที่เจอ
-        const remarkCols = [dBuyerMsg, dSellerNote].filter(c => c >= 0);
-        if (remarkCols.length > 0) effectiveMap.remark = remarkCols.length === 1 ? remarkCols[0] : remarkCols;
-        effectiveMap.headerRows = detectedStartRow;
-
-        console.log('[TikTok Auto-Detect] tracking:', dTracking, 'sku:', dSku, 'qty:', dQty,
-                    'buyerMsg:', dBuyerMsg, 'sellerNote:', dSellerNote, 'startRow:', detectedStartRow);
+    // ===== Auto-Detect: อ่าน header จริง แล้ว override ตำแหน่ง column =====
+    let useMap = { ...map };
+    if (rows.length > 0 && rows[0]) {
+      const detected = autoDetectColumns(marketplace, rows[0]);
+      if (detected) {
+        if (detected.tracking !== undefined) useMap.tracking = detected.tracking;
+        if (detected.sku !== undefined) useMap.sku = detected.sku;
+        if (detected.qty !== undefined && map.qty !== -1) useMap.qty = detected.qty;
+        if (detected.remark !== undefined) useMap.remark = detected.remark;
       }
+      // ตรวจจับ description rows (TikTok มี row อธิบายใต้ header)
+      let detectedStart = map.headerRows || 1;
+      for (let r = 1; r < Math.min(5, rows.length); r++) {
+        const firstCell = String(rows[r]?.[0] || '').trim().toLowerCase();
+        if (firstCell.includes('platform') || firstCell.includes('the ') || firstCell.includes('order') && firstCell.length > 30) {
+          detectedStart = r + 1;
+        } else break;
+      }
+      useMap.headerRows = detectedStart;
     }
 
-    const startRow = effectiveMap.headerRows || map.headerRows || 1;
+    const startRow = useMap.headerRows || 1;
     if (marketplace === 'lazada') {
       const trackingMap = {};
       for (let i = startRow; i < rows.length; i++) {
         const row = rows[i]; if (!row) continue;
-        const tracking = String(row[map.tracking] || '').trim().toUpperCase();
-        const sku      = String(row[map.sku]      || '').trim().toUpperCase();
+        const tracking = String(row[useMap.tracking] || '').trim().toUpperCase();
+        const sku      = String(row[useMap.sku]      || '').trim().toUpperCase();
         if (!tracking || !sku || tracking === 'UNDEFINED' || sku === 'UNDEFINED') continue;
         const key = tracking + '|' + sku;
         trackingMap[key] = (trackingMap[key] || 0) + 1;
-        // ดึง remark (Lazada: column BX = index 75)
-        if (map.remark !== undefined && !remarkMap[tracking]) {
-          const rv = String(row[map.remark] || '').trim();
+        // ดึง remark (Lazada: sellerNote)
+        if (useMap.remark !== undefined && !remarkMap[tracking]) {
+          let rv = '';
+          if (Array.isArray(useMap.remark)) {
+            rv = useMap.remark.map(ci => String(row[ci] || '').trim()).filter(Boolean).join(' | ');
+          } else {
+            rv = String(row[useMap.remark] || '').trim();
+          }
           if (rv) remarkMap[tracking] = rv;
         }
       }
@@ -2806,7 +2857,6 @@ async function processFileUpload() {
         extractData.push({ marketplace, tracking, sku, qty: trackingMap[key], remark: remarkMap[tracking] || "" });
       }
     } else {
-      const useMap = (marketplace === 'tiktok') ? effectiveMap : map;
       for (let i = startRow; i < rows.length; i++) {
         const row = rows[i]; if (!row) continue;
         const tracking = String(row[useMap.tracking] || '').trim().toUpperCase();
@@ -2814,11 +2864,10 @@ async function processFileUpload() {
         const qty      = parseInt(row[useMap.qty]) || 1;
         if (!tracking || !sku || tracking === 'UNDEFINED' || sku === 'UNDEFINED') continue;
         if (tracking.length < 5 || tracking.includes(' ')) continue;
-        // ดึง remark (Shopee: [49, 57], TikTok: [AL, BA], Page365: 22)
+        // ดึง remark (รวมหลาย column: Buyer Message | Seller Note)
         if (!remarkMap[tracking] && useMap.remark !== undefined) {
           let rv = '';
           if (Array.isArray(useMap.remark)) {
-            // รวมหลาย column (Shopee, TikTok)
             rv = useMap.remark.map(ci => String(row[ci] || '').trim()).filter(Boolean).join(' | ');
           } else {
             rv = String(row[useMap.remark] || '').trim();
