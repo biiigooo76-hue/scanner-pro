@@ -2812,6 +2812,8 @@ async function processFileUpload() {
 
     // ===== Auto-Detect: อ่าน header จริง แล้ว override ตำแหน่ง column =====
     let useMap = { ...map };
+    console.log(`[Upload] marketplace=${marketplace}, fallback map=`, JSON.stringify(map));
+    console.log(`[Upload] rows.length=${rows.length}, row[0] cols=${rows[0]?.length}`);
     if (rows.length > 0 && rows[0]) {
       const detected = autoDetectColumns(marketplace, rows[0]);
       if (detected) {
@@ -2824,21 +2826,29 @@ async function processFileUpload() {
       let detectedStart = map.headerRows || 1;
       for (let r = 1; r < Math.min(5, rows.length); r++) {
         const firstCell = String(rows[r]?.[0] || '').trim().toLowerCase();
-        if (firstCell.includes('platform') || firstCell.includes('the ') || firstCell.includes('order') && firstCell.length > 30) {
+        if (firstCell.includes('platform') || firstCell.includes('the ') || (firstCell.includes('order') && firstCell.length > 30)) {
           detectedStart = r + 1;
         } else break;
       }
       useMap.headerRows = detectedStart;
     }
+    console.log(`[Upload] final useMap=`, JSON.stringify(useMap));
 
     const startRow = useMap.headerRows || 1;
+    console.log(`[Upload] startRow=${startRow}, will read rows[${startRow}] to rows[${rows.length - 1}]`);
     if (marketplace === 'lazada') {
       const trackingMap = {};
+      let lazSkipped = 0, lazProcessed = 0;
       for (let i = startRow; i < rows.length; i++) {
-        const row = rows[i]; if (!row) continue;
+        const row = rows[i]; if (!row) { lazSkipped++; continue; }
         const tracking = String(row[useMap.tracking] || '').trim().toUpperCase();
         const sku      = String(row[useMap.sku]      || '').trim().toUpperCase();
-        if (!tracking || !sku || tracking === 'UNDEFINED' || sku === 'UNDEFINED') continue;
+        if (!tracking || !sku || tracking === 'UNDEFINED' || sku === 'UNDEFINED') {
+          lazSkipped++;
+          console.log(`[Lazada] skip row ${i}: tracking='${tracking}', sku='${sku}', raw_tracking=${JSON.stringify(row[useMap.tracking])}, raw_sku=${JSON.stringify(row[useMap.sku])}`);
+          continue;
+        }
+        lazProcessed++;
         const key = tracking + '|' + sku;
         trackingMap[key] = (trackingMap[key] || 0) + 1;
         // ดึง remark (Lazada: sellerNote)
