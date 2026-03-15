@@ -1397,16 +1397,16 @@ const headerKeywords = {
     remarkSeller: ['seller note']
   },
   'shopee': {
-    tracking: ['หมายเลขติดตามพัสดุ', 'tracking'],
+    tracking: ['หมายเลขติดตามพัสดุ'],
     sku:      ['เลขอ้างอิง sku', 'sku reference'],
-    qty:      ['จำนวน', 'quantity'],
-    remarkBuyer:  ['หมายเหตุจากผู้ซื้อ', 'buyer remark', 'buyer note'],
+    qty:      ['จำนวน'],
+    remarkBuyer:  ['หมายเหตุจากผู้ซื้อ'],
     remarkSeller: ['บันทึก']
   },
   'lazada': {
-    tracking: ['trackingcode', 'tracking code'],
-    sku:      ['sellersku', 'seller sku'],
-    remarkSeller: ['sellernote', 'seller note']
+    tracking: ['trackingcode'],  // exact match only — ห้าม match กับ cdTrackingCode
+    sku:      ['sellersku'],
+    remarkSeller: ['sellernote']
   },
   'page365': {
     tracking: ['tracking number'],
@@ -1422,10 +1422,18 @@ function autoDetectColumns(marketplace, headerRow) {
   if (!kw || !headerRow) return null;
   const headers = headerRow.map(h => String(h || '').trim().toLowerCase());
 
+  // ค้นหา column: exact match เท่านั้น (ไม่ใช้ includes เพื่อป้องกัน cdTrackingCode match กับ trackingcode)
   const findCol = (keywords) => {
     if (!keywords) return -1;
+    // Pass 1: exact match
     for (const k of keywords) {
-      const idx = headers.findIndex(h => h === k || h.includes(k));
+      const idx = headers.findIndex(h => h === k);
+      if (idx >= 0) return idx;
+    }
+    // Pass 2: includes — แต่เฉพาะ keyword ที่มีเว้นวรรค (multi-word) เท่านั้น
+    for (const k of keywords) {
+      if (!k.includes(' ')) continue; // skip single-word — ใช้ exact match เท่านั้น
+      const idx = headers.findIndex(h => h.includes(k));
       if (idx >= 0) return idx;
     }
     return -1;
