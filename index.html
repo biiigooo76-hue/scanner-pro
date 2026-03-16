@@ -1504,23 +1504,94 @@ document.addEventListener('visibilitychange', () => {
     // หยุดสแกนเนอร์ชั่วคราว
     if (scanner) { try { scanner.pause(true); } catch(e) {} }
     releaseWakeLock();
+
+    // ===== FLUSH: ส่งข้อมูลค้างใน failedUploadQueue ก่อนปิดแอป =====
+    _flushPendingUploads();
+
   } else if (document.visibilityState === 'visible') {
     if (currentP) {
       requestWakeLock();
       if (scanner) { try { scanner.resume(); } catch(e) {} }
       if (!isRecording) startCameraRecording().catch(() => {});
     }
+    // กลับมาแล้ว → retry queue ที่อาจ flush ไม่ทัน
+    setTimeout(() => retryFailedUploads(), 1000);
   }
 });
 
-// pagehide — ปิดกล้องทุกตัวเมื่อปิด tab หรือ navigate ออก
-window.addEventListener('pagehide', () => {
+// pagehide — ปิดกล้อง + flush ข้อมูลด้วย sendBeacon (เชื่อถือได้กว่า fetch ตอนปิด tab)
+window.addEventListener('pagehide', (e) => {
   if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
   if (scanner) { try { scanner.clear(); } catch(e) {} }
+  _flushWithBeacon();
 });
 
-// ป้องกันปิด tab / refresh โดยไม่ตั้งใจระหว่างแพ็กสินค้า
+// ===== FLUSH PENDING UPLOADS (ส่งข้อมูลก่อนปิดแอป) =====
+// ใช้ 3 กลยุทธ์ซ้อนกัน เพื่อให้แน่ใจว่าข้อมูลถูกส่งออกไปก่อนปิดหน้าจอ:
+// 1. visibilitychange=hidden → flush ด้วย fetch (keepalive)
+// 2. pagehide → flush ด้วย navigator.sendBeacon (เชื่อถือได้ที่สุด)
+// 3. beforeunload → flush สุดท้าย (fallback)
+let _flushedIds = new Set(); // ป้องกัน duplicate flush
+
+function _flushPendingUploads() {
+  try {
+    const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
+    if (q.length === 0) return;
+    console.log(`[Flush] พยายามส่ง ${q.length} รายการก่อนปิดแอป...`);
+    const remaining = [];
+    for (const job of q) {
+      if (_flushedIds.has(job.pId)) continue;
+      _flushedIds.add(job.pId);
+      try {
+        // fetch + keepalive: บราวเซอร์จะส่งต่อแม้ปิด tab แล้ว (limit 64KB)
+        fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({
+            action: "saveData",
+            parcelId: job.pId,
+            items: job.itemsArr,
+            videoEvidence: "no_video",
+            remark: job.remarkNote || ""
+          }),
+          keepalive: true
+        }).catch(() => {});
+        console.log(`[Flush] ส่ง ${job.pId} ด้วย fetch+keepalive`);
+      } catch(e) {
+        remaining.push(job);
+      }
+    }
+    // เก็บเฉพาะที่ส่งไม่ได้ → retry รอบหน้าเปิดแอป
+    localStorage.setItem(FAIL_QUEUE_KEY, JSON.stringify(remaining));
+  } catch(e) { console.error('[Flush]', e); }
+}
+
+function _flushWithBeacon() {
+  try {
+    const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
+    if (q.length === 0) return;
+    for (const job of q) {
+      if (_flushedIds.has(job.pId)) continue;
+      _flushedIds.add(job.pId);
+      // sendBeacon: เชื่อถือได้ที่สุดตอนปิด tab — browser รับประกันว่าจะส่ง
+      const payload = JSON.stringify({
+        action: "saveData",
+        parcelId: job.pId,
+        items: job.itemsArr,
+        videoEvidence: "no_video",
+        remark: job.remarkNote || ""
+      });
+      const sent = navigator.sendBeacon(GAS_URL, new Blob([payload], { type: 'text/plain' }));
+      console.log(`[Beacon] ${job.pId}: ${sent ? 'queued' : 'failed'}`);
+    }
+    // ล้าง queue ถ้า beacon สำเร็จ
+    localStorage.setItem(FAIL_QUEUE_KEY, '[]');
+  } catch(e) { console.error('[Beacon]', e); }
+}
+
+// ป้องกันปิด tab / refresh โดยไม่ตั้งใจระหว่างแพ็กสินค้า + flush ข้อมูล
 window.addEventListener('beforeunload', (e) => {
+  _flushPendingUploads(); // พยายามส่งอีกครั้ง
   if (currentP && !isFinishing) {
     e.preventDefault();
     e.returnValue = 'กำลังแพ็กสินค้าอยู่ ออกจากหน้านี้จะทำให้ข้อมูลหาย';
@@ -2830,8 +2901,9 @@ async function processFileUpload() {
         if (detected.qty !== undefined && map.qty !== -1) useMap.qty = detected.qty;
         if (detected.remark !== undefined) useMap.remark = detected.remark;
       }
-      // ตรวจจับ description rows (TikTok มี row อธิบายใต้ header)
-      let detectedStart = map.headerRows || 1;
+      // ตรวจจับ description rows (TikTok XLSX มี row อธิบายใต้ header, CSV ไม่มี)
+      // เริ่มจาก 1 เสมอ แล้วเพิ่มเฉพาะเมื่อเจอ description row จริง
+      let detectedStart = 1;
       for (let r = 1; r < Math.min(5, rows.length); r++) {
         const firstCell = String(rows[r]?.[0] || '').trim().toLowerCase();
         if (firstCell.includes('platform') || firstCell.includes('the ') || (firstCell.includes('order') && firstCell.length > 30)) {
