@@ -1655,6 +1655,326 @@
       background: #fae8e8 !important;
       transform: scale(1.1);
     }
+
+    /* ============================================================
+       🌽 DASHBOARD & UPLOAD — MEGA ANIMATION BOOST
+       ============================================================ */
+
+    /* ── Tab Transition Replay System ── */
+    .tab-anim-enter {
+      animation: tabPageEnter 0.55s cubic-bezier(0.23,1,0.32,1) both !important;
+    }
+    @keyframes tabPageEnter {
+      0%   { opacity: 0; transform: translateY(28px) scale(0.97); filter: blur(6px); }
+      60%  { filter: blur(0); }
+      100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    /* ── DASHBOARD: Preset Buttons Stagger ── */
+    .dash-presets {
+      overflow: hidden;
+    }
+    .preset-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    .preset-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 0; height: 0;
+      background: radial-gradient(circle, rgba(212,168,67,0.2) 0%, transparent 70%);
+      border-radius: 50%;
+      transform: translate(-50%,-50%);
+      transition: width 0.5s, height 0.5s;
+    }
+    .preset-btn:active::before {
+      width: 200px; height: 200px;
+    }
+    .anim-stagger-1 { animation: presetBtnStagger 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.05s both !important; }
+    .anim-stagger-2 { animation: presetBtnStagger 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.1s both !important; }
+    .anim-stagger-3 { animation: presetBtnStagger 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.15s both !important; }
+    .anim-stagger-4 { animation: presetBtnStagger 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.2s both !important; }
+    .anim-stagger-5 { animation: presetBtnStagger 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.25s both !important; }
+    @keyframes presetBtnStagger {
+      0%   { opacity: 0; transform: translateY(12px) scale(0.85); }
+      70%  { transform: translateY(-2px) scale(1.05); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── DASHBOARD: Date Picker Slide ── */
+    .dash-datepicker.anim-active {
+      animation: datePickerSlide 0.5s cubic-bezier(0.23,1,0.32,1) 0.15s both !important;
+    }
+    @keyframes datePickerSlide {
+      from { opacity: 0; transform: translateX(-30px) scaleX(0.9); }
+      to   { opacity: 1; transform: translateX(0) scaleX(1); }
+    }
+    .dash-search-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    .dash-search-btn::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,230,0.4), transparent);
+      animation: none;
+    }
+    .dash-search-btn.anim-active::after {
+      animation: searchBtnGlint 2s ease 1s both;
+    }
+    @keyframes searchBtnGlint {
+      0%   { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    /* ── DASHBOARD: Stat Cards Mega Pop ── */
+    .stat-card.anim-pop {
+      animation: statCardMegaPop 0.7s cubic-bezier(0.34,1.56,0.64,1) both !important;
+    }
+    .stat-card.anim-pop:nth-child(1) { animation-delay: 0.2s !important; }
+    .stat-card.anim-pop:nth-child(2) { animation-delay: 0.35s !important; }
+    @keyframes statCardMegaPop {
+      0%   { opacity: 0; transform: scale(0.5) translateY(40px) rotate(-3deg); }
+      50%  { transform: scale(1.08) translateY(-5px) rotate(1deg); }
+      70%  { transform: scale(0.97) translateY(2px) rotate(0deg); }
+      100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
+    }
+
+    /* ── DASHBOARD: Stat Number Count-Up Glow ── */
+    .stat-num.anim-glow {
+      animation: statNumGlow 1.2s ease 0.5s both;
+    }
+    @keyframes statNumGlow {
+      0%   { filter: brightness(1); transform: scale(1); }
+      30%  { filter: brightness(1.4); transform: scale(1.15); }
+      60%  { filter: brightness(1.1); transform: scale(0.95); }
+      100% { filter: brightness(1); transform: scale(1); }
+    }
+
+    /* ── DASHBOARD: Stat Card Emoji Bounce ── */
+    .stat-card .stat-emoji-anim {
+      display: inline-block;
+      animation: emojiDancePop 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .stat-card:nth-child(1) .stat-emoji-anim { animation-delay: 0.15s; }
+    .stat-card:nth-child(2) .stat-emoji-anim { animation-delay: 0.3s; }
+    @keyframes emojiDancePop {
+      0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+      50%  { transform: scale(1.4) rotate(10deg); opacity: 1; }
+      75%  { transform: scale(0.9) rotate(-5deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    /* ── DASHBOARD: Period Badge Pop ── */
+    .dash-period-badge.anim-active {
+      animation: periodBadgeFlip 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s both !important;
+    }
+    @keyframes periodBadgeFlip {
+      0%   { opacity: 0; transform: scale(0.4) rotateX(90deg); }
+      60%  { transform: scale(1.1) rotateX(-5deg); }
+      100% { opacity: 1; transform: scale(1) rotateX(0deg); }
+    }
+
+    /* ── DASHBOARD: Table Cards Cascade ── */
+    .dash-table-card.anim-cascade-1 {
+      animation: dashCardCascade 0.6s cubic-bezier(0.23,1,0.32,1) 0.25s both !important;
+    }
+    .dash-table-card.anim-cascade-2 {
+      animation: dashCardCascade 0.6s cubic-bezier(0.23,1,0.32,1) 0.4s both !important;
+    }
+    .dash-table-card.anim-cascade-3 {
+      animation: dashCardCascade 0.6s cubic-bezier(0.23,1,0.32,1) 0.55s both !important;
+    }
+    @keyframes dashCardCascade {
+      0%   { opacity: 0; transform: translateY(35px) scale(0.95); }
+      60%  { transform: translateY(-4px) scale(1.01); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── DASHBOARD: Daily Target Glow Ring ── */
+    #dailyTargetWrap.anim-active {
+      animation: targetWrapGlow 0.6s cubic-bezier(0.23,1,0.32,1) 0.3s both;
+    }
+    @keyframes targetWrapGlow {
+      0%   { opacity: 0; transform: translateY(20px); box-shadow: 8px 8px 20px var(--sd), -8px -8px 20px var(--sl); }
+      50%  { box-shadow: 8px 8px 20px var(--sd), -8px -8px 20px var(--sl), 0 0 20px rgba(212,168,67,0.2); }
+      100% { opacity: 1; transform: translateY(0); box-shadow: 8px 8px 20px var(--sd), -8px -8px 20px var(--sl); }
+    }
+
+    /* ── DASHBOARD: Trophy / Section Emoji Spin ── */
+    .section-emoji-spin {
+      display: inline-block;
+      animation: sectionEmojiSpin 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes sectionEmojiSpin {
+      0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
+      60%  { transform: scale(1.3) rotate(15deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    /* ── DASHBOARD: Dash Row Stagger Cascade ── */
+    .dash-row.anim-row-enter {
+      animation: dashRowCascade 0.4s cubic-bezier(0.23,1,0.32,1) both !important;
+    }
+    @keyframes dashRowCascade {
+      0%   { opacity: 0; transform: translateX(-25px) scale(0.96); }
+      70%  { transform: translateX(3px) scale(1.01); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    /* ── DASHBOARD: Loading Spinner Enhanced ── */
+    #dashLoading .dash-spinner-anim {
+      animation: spin 0.7s linear infinite, spinnerPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes spinnerPulse {
+      0%,100% { border-top-color: var(--text); transform-origin: center; }
+      50%     { border-top-color: #d4a843; }
+    }
+
+    /* ── DASHBOARD: Reset Button Wobble ── */
+    .btn-neu-sm.anim-wobble:hover {
+      animation: resetWobble 0.4s ease;
+    }
+    @keyframes resetWobble {
+      0%,100% { transform: rotate(0deg); }
+      25%     { transform: rotate(-2deg); }
+      75%     { transform: rotate(2deg); }
+    }
+
+    /* ── UPLOAD: Main Card Entrance ── */
+    #upload .card.anim-active {
+      animation: uploadCardEntrance 0.7s cubic-bezier(0.23,1,0.32,1) both !important;
+    }
+    @keyframes uploadCardEntrance {
+      0%   { opacity: 0; transform: translateY(40px) scale(0.93) rotateX(5deg); }
+      50%  { transform: translateY(-5px) scale(1.01) rotateX(-1deg); }
+      100% { opacity: 1; transform: translateY(0) scale(1) rotateX(0deg); }
+    }
+
+    /* ── UPLOAD: Section Title Typewriter ── */
+    #upload .section-title.anim-active {
+      animation: sectionTitleSlide 0.5s cubic-bezier(0.23,1,0.32,1) both;
+      position: relative;
+    }
+    #upload .section-title.anim-active:nth-of-type(1) { animation-delay: 0.15s; }
+    #upload .section-title.anim-active:nth-of-type(2) { animation-delay: 0.55s; }
+    @keyframes sectionTitleSlide {
+      0%   { opacity: 0; transform: translateX(-20px); }
+      60%  { transform: translateX(4px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── UPLOAD: Marketplace Icon Bounce ── */
+    .mp-icon.anim-active {
+      animation: mpIconBounce 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes mpIconBounce {
+      0%   { transform: scale(0) rotate(-30deg); }
+      60%  { transform: scale(1.2) rotate(8deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    /* ── UPLOAD: MP Option Mega Stagger ── */
+    .mp-option.anim-enter-1 { animation: mpOptionMegaEnter 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both !important; }
+    .mp-option.anim-enter-2 { animation: mpOptionMegaEnter 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both !important; }
+    .mp-option.anim-enter-3 { animation: mpOptionMegaEnter 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.3s both !important; }
+    .mp-option.anim-enter-4 { animation: mpOptionMegaEnter 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.4s both !important; }
+    @keyframes mpOptionMegaEnter {
+      0%   { opacity: 0; transform: translateX(-40px) scale(0.9) rotate(-2deg); }
+      50%  { transform: translateX(6px) scale(1.03) rotate(0.5deg); }
+      70%  { transform: translateX(-2px) scale(0.99); }
+      100% { opacity: 1; transform: translateX(0) scale(1) rotate(0deg); }
+    }
+
+    /* ── UPLOAD: MP Radio Pulse when Selected ── */
+    .mp-option.selected .mp-radio {
+      animation: radioPulse 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes radioPulse {
+      0%   { transform: scale(1); box-shadow: inset 0 0 0 3px var(--bg); }
+      40%  { transform: scale(1.4); box-shadow: inset 0 0 0 3px var(--bg), 0 0 12px rgba(212,168,67,0.5); }
+      100% { transform: scale(1); box-shadow: inset 0 0 0 3px var(--bg); }
+    }
+
+    /* ── UPLOAD: File Input Glow on Change ── */
+    .file-input-neu.anim-glow {
+      animation: fileInputGlow 0.8s ease both;
+    }
+    @keyframes fileInputGlow {
+      0%   { box-shadow: inset 4px 4px 10px var(--sd), inset -4px -4px 10px var(--sl) !important; }
+      50%  { box-shadow: inset 4px 4px 10px var(--sd), inset -4px -4px 10px var(--sl), 0 0 16px rgba(122,184,122,0.4) !important; }
+      100% { box-shadow: inset 4px 4px 10px var(--sd), inset -4px -4px 10px var(--sl) !important; }
+    }
+
+    /* ── UPLOAD: Upload Button Pulse Ready ── */
+    .btn-neu-gold.anim-ready {
+      animation: uploadBtnPulse 2s ease-in-out infinite;
+    }
+    @keyframes uploadBtnPulse {
+      0%,100% { box-shadow: 4px 4px 10px rgba(212,168,67,0.4), -3px -3px 8px var(--sl); }
+      50%     { box-shadow: 4px 4px 10px rgba(212,168,67,0.4), -3px -3px 8px var(--sl), 0 0 22px rgba(212,168,67,0.35); }
+    }
+
+    /* ── UPLOAD: Upload Button Arrow Animation ── */
+    .btn-neu-gold .upload-arrow {
+      display: inline-block;
+      animation: arrowFloat 1.5s ease-in-out infinite;
+    }
+    @keyframes arrowFloat {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(-4px); }
+    }
+
+    /* ── UPLOAD: Guide Button Shine ── */
+    .mp-guide-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    .mp-guide-btn::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,230,0.35), transparent);
+    }
+    .mp-guide-btn.anim-active::after {
+      animation: guideShine 1.5s ease 0.8s both;
+    }
+    @keyframes guideShine {
+      0%   { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    /* ── Confetti Particle (JS spawned) ── */
+    .confetti-particle {
+      position: fixed;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 9998;
+      animation: confettiFall 1.5s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    }
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+      100% { opacity: 0; transform: translateY(120px) rotate(720deg) scale(0.3); }
+    }
+
+    /* ── Floating Emoji (JS spawned for tab switch) ── */
+    .floating-emoji {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      font-size: 1.5rem;
+      animation: floatingEmojiUp 1.2s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    }
+    @keyframes floatingEmojiUp {
+      0%   { opacity: 1; transform: translateY(0) scale(0.5) rotate(0deg); }
+      40%  { opacity: 1; transform: translateY(-40px) scale(1.3) rotate(20deg); }
+      100% { opacity: 0; transform: translateY(-100px) scale(0.8) rotate(-15deg); }
+    }
   </style>
 </head>
 <body>
@@ -1905,8 +2225,8 @@
     </div>
     <!-- Loading -->
     <div id="dashLoading" style="display:none; text-align:center; padding:20px;">
-      <div style="width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 8px;"></div>
-      <div style="font-size:0.78rem;color:var(--text3);">กำลังโหลดข้อมูล...</div>
+      <div class="dash-spinner-anim" style="width:24px;height:24px;border:2.5px solid var(--pink-light);border-top-color:var(--pink);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 8px;"></div>
+      <div style="font-size:0.78rem;color:var(--text3);animation:fadeInUp 0.3s ease both;">กำลังโหลดข้อมูล...</div>
     </div>
     <!-- Report Content -->
     <div id="dashContent" style="display:none;">
@@ -2044,7 +2364,7 @@
       <input type="file" id="fileInput" class="form-control file-input-neu mt-2" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
 
       <button onclick="processFileUpload()" class="btn-neu-gold w-100 mt-3" style="padding:12px; font-size:1rem;">
-        📤 อัปโหลดข้อมูล
+        <span class="upload-arrow">📤</span> อัปโหลดข้อมูล
       </button>
     </div>
   </div>
@@ -3756,12 +4076,21 @@ let lastReportParams = '';
 
 function openTab(tab, btn) {
   document.querySelectorAll('#scan, #search, #dash, #upload').forEach(el => el.style.display = 'none');
-  document.getElementById(tab).style.display = 'block';
+  const target = document.getElementById(tab);
+  target.style.display = 'block';
+  
+  // Replay entrance animation
+  target.classList.remove('tab-anim-enter');
+  void target.offsetWidth;
+  target.classList.add('tab-anim-enter');
+  
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  // scroll to top เมื่อสลับ tab
   window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // ── Dashboard Animations ──
   if (tab === 'dash') {
+    animateDashboard();
     refreshDash();
     if (!document.getElementById('dashStart').value) {
       setPreset('today', document.querySelector('.preset-btn'));
@@ -3773,8 +4102,220 @@ function openTab(tab, btn) {
       if (stale || key !== lastReportParams) fetchReport();
     }
   }
+
+  // ── Upload Animations ──
+  if (tab === 'upload') {
+    animateUpload();
+  }
+
+  // ── Search Animations ──
+  if (tab === 'search') {
+    animateSearch();
+  }
+
   if (tab !== 'search' && searchScanner) { searchScanner.clear(); document.getElementById("search-reader").style.display = "none"; }
+
+  // Spawn floating emoji for tab switch
+  spawnTabEmoji(tab, btn);
 }
+
+// ============================================================
+// 🌽 TAB ANIMATION FUNCTIONS
+// ============================================================
+
+function replayAnim(el, className) {
+  if (!el) return;
+  el.classList.remove(className);
+  void el.offsetWidth;
+  el.classList.add(className);
+}
+
+function animateDashboard() {
+  // Preset buttons stagger
+  const presets = document.querySelectorAll('.preset-btn');
+  presets.forEach((btn, i) => {
+    btn.classList.remove('anim-stagger-' + (i+1));
+    void btn.offsetWidth;
+    btn.classList.add('anim-stagger-' + (i+1));
+  });
+
+  // Date picker slide
+  const dp = document.querySelector('.dash-datepicker');
+  if (dp) replayAnim(dp, 'anim-active');
+
+  // Search button glint
+  const sb = document.querySelector('.dash-search-btn');
+  if (sb) replayAnim(sb, 'anim-active');
+
+  // Period badge
+  const pb = document.querySelector('.dash-period-badge');
+  if (pb) replayAnim(pb, 'anim-active');
+
+  // Stat cards mega pop
+  document.querySelectorAll('.stat-card').forEach(c => {
+    replayAnim(c, 'anim-pop');
+  });
+
+  // Stat emoji bounce
+  document.querySelectorAll('.stat-card > div:first-child').forEach(e => {
+    e.classList.remove('stat-emoji-anim');
+    void e.offsetWidth;
+    e.classList.add('stat-emoji-anim');
+  });
+
+  // Stat num glow
+  document.querySelectorAll('.stat-num').forEach(n => {
+    replayAnim(n, 'anim-glow');
+  });
+
+  // Daily target wrap
+  const tw = document.getElementById('dailyTargetWrap');
+  if (tw) replayAnim(tw, 'anim-active');
+
+  // Table cards cascade
+  const tableCards = document.querySelectorAll('#dashContent .dash-table-card');
+  tableCards.forEach((c, i) => {
+    const cls = 'anim-cascade-' + (i+1);
+    c.classList.remove(cls);
+    void c.offsetWidth;
+    c.classList.add(cls);
+  });
+
+  // Section emojis spin
+  document.querySelectorAll('#dash .section-emoji').forEach(e => {
+    e.classList.remove('section-emoji-spin');
+    void e.offsetWidth;
+    e.classList.add('section-emoji-spin');
+  });
+
+  // Dash rows stagger (delayed to wait for data)
+  setTimeout(() => {
+    document.querySelectorAll('.dash-row').forEach((r, i) => {
+      r.classList.remove('anim-row-enter');
+      void r.offsetWidth;
+      r.style.animationDelay = (0.1 + i * 0.06) + 's';
+      r.classList.add('anim-row-enter');
+    });
+  }, 400);
+
+  // Mini confetti on dashboard open
+  spawnMiniConfetti(3, ['#f5e0a0','#d4a843','#c8e8b8','#f0c8c8','#b8d8f0']);
+}
+
+function animateUpload() {
+  // Card entrance
+  const card = document.querySelector('#upload .card');
+  if (card) replayAnim(card, 'anim-active');
+
+  // Section titles
+  document.querySelectorAll('#upload .section-title').forEach((t, i) => {
+    t.classList.remove('anim-active');
+    void t.offsetWidth;
+    t.style.animationDelay = (0.15 + i * 0.4) + 's';
+    t.classList.add('anim-active');
+  });
+
+  // MP options mega stagger
+  const mpOpts = document.querySelectorAll('#upload .mp-option');
+  mpOpts.forEach((opt, i) => {
+    const cls = 'anim-enter-' + (i+1);
+    opt.classList.remove(cls);
+    void opt.offsetWidth;
+    opt.classList.add(cls);
+  });
+
+  // MP icons bounce
+  document.querySelectorAll('#upload .mp-icon').forEach((icon, i) => {
+    icon.classList.remove('anim-active');
+    void icon.offsetWidth;
+    icon.style.animationDelay = (0.2 + i * 0.1) + 's';
+    icon.classList.add('anim-active');
+  });
+
+  // Guide buttons shine
+  document.querySelectorAll('#upload .mp-guide-btn').forEach((btn, i) => {
+    btn.classList.remove('anim-active');
+    void btn.offsetWidth;
+    btn.style.setProperty('--shine-delay', (0.8 + i * 0.15) + 's');
+    btn.classList.add('anim-active');
+  });
+
+  // File input
+  const fi = document.querySelector('#upload .file-input-neu');
+  if (fi) {
+    fi.classList.remove('anim-glow');
+    void fi.offsetWidth;
+  }
+
+  // Upload button arrow
+  const ub = document.querySelector('#upload .btn-neu-gold');
+  if (ub) replayAnim(ub, 'anim-ready');
+}
+
+function animateSearch() {
+  // Search input focus glow
+  const iw = document.querySelector('#search .input-neu-wrap');
+  if (iw) {
+    iw.style.transition = 'box-shadow 0.5s ease';
+    iw.style.boxShadow = 'inset 4px 4px 10px var(--sd), inset -4px -4px 10px var(--sl), 0 0 16px rgba(212,168,67,0.2)';
+    setTimeout(() => { iw.style.boxShadow = ''; }, 1200);
+  }
+  // Search button icons
+  document.querySelectorAll('#search .btn-neu-icon, #search .btn-neu-gold').forEach((b, i) => {
+    b.style.animation = 'none';
+    void b.offsetWidth;
+    b.style.animation = `presetBtnStagger 0.45s cubic-bezier(0.34,1.56,0.64,1) ${0.1 + i * 0.1}s both`;
+  });
+}
+
+function spawnTabEmoji(tab, btn) {
+  const emojiMap = { scan: '📦', search: '🔍', dash: '📊', upload: '📥' };
+  const emoji = emojiMap[tab] || '✨';
+  const rect = btn.getBoundingClientRect();
+  for (let i = 0; i < 3; i++) {
+    const el = document.createElement('div');
+    el.className = 'floating-emoji';
+    el.textContent = emoji;
+    el.style.left = (rect.left + rect.width/2 - 12 + (Math.random()-0.5)*30) + 'px';
+    el.style.top = (rect.top - 10) + 'px';
+    el.style.animationDelay = (i * 0.12) + 's';
+    el.style.fontSize = (1.2 + Math.random()*0.6) + 'rem';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+  }
+}
+
+function spawnMiniConfetti(count, colors) {
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 3;
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-particle';
+    el.style.left = (cx + (Math.random()-0.5) * 100) + 'px';
+    el.style.top = (cy + (Math.random()-0.5) * 40) + 'px';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDelay = (Math.random() * 0.3) + 's';
+    el.style.width = (5 + Math.random()*6) + 'px';
+    el.style.height = (5 + Math.random()*6) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+}
+
+// ── File Input Change Animation ──
+document.addEventListener('DOMContentLoaded', () => {
+  const fi = document.getElementById('fileInput');
+  if (fi) {
+    fi.addEventListener('change', () => {
+      fi.classList.remove('anim-glow');
+      void fi.offsetWidth;
+      fi.classList.add('anim-glow');
+      // Also pulse upload button
+      const ub = document.querySelector('#upload .btn-neu-gold');
+      if (ub) replayAnim(ub, 'anim-ready');
+    });
+  }
+});
 
 function refreshDash() {
   const entries = Object.entries(sessionParcels);
