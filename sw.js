@@ -1,45 +1,70 @@
-// Lamsangstore Scanner — Service Worker
-const CACHE = 'ls-scanner-v1';
-const ASSETS = [
+// Lamsangstore Scanner — Service Worker v2
+// Force new cache to replace old icons/manifest
+
+const CACHE_NAME = 'ls-scanner-v2';
+const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css',
-  'https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Sarabun:wght@300;400;600&display=swap',
+  './manifest.json',
+  './icon-192x192.png',
+  './icon-512x512.png',
+  './apple-touch-icon.png',
+  './favicon.ico'
 ];
 
-// Install — cache core assets
-self.addEventListener('install', e => {
-  self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS).catch(() => {}))
+// Install: cache new assets
+self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Force activate immediately
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
   );
 });
 
-// Activate — clean old caches
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+// Activate: delete ALL old caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((names) => {
+      return Promise.all(
+        names.filter((name) => name !== CACHE_NAME)
+             .map((name) => {
+               console.log('[SW] Deleting old cache:', name);
+               return caches.delete(name);
+             })
+      );
+    }).then(() => self.clients.claim()) // Take control immediately
   );
 });
 
-// Fetch — network first, fallback to cache (ป้องกัน stale data)
-self.addEventListener('fetch', e => {
-  // ไม่ cache GAS API calls
-  if (e.request.url.includes('script.google.com')) return;
+// Fetch: network-first for manifest and icons, cache-first for others
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Always fetch manifest and icons from network (never serve stale)
+  if (url.pathname.includes('manifest') || 
+      url.pathname.includes('icon-') || 
+      url.pathname.includes('apple-touch-icon') ||
+      url.pathname.includes('favicon')) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        // Update cache with fresh version
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
-  e.respondWith(
-    fetch(e.request)
-      .then(res => {
-        // cache response ใหม่
-        if (res && res.status === 200 && e.request.method === 'GET') {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return res;
-      })
-      .catch(() => caches.match(e.request))
+  // Cache-first for other assets
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      return cached || fetch(event.request).then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      });
+    })
   );
 });
