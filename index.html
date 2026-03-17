@@ -6,7 +6,7 @@
   <meta http-equiv="Permissions-Policy" content="camera=*">
   <title>Lamsangstore — Scanner</title>
   <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json?v=2">
   <meta name="theme-color" content="#fdf8ed">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -4628,7 +4628,21 @@ function bumpCount() {
 
 // ===== PWA — SERVICE WORKER REGISTRATION =====
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+  window.addEventListener('load', async () => {
+    // Force unregister old SW and clear all caches to pick up new manifest/icons
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) {
+        await reg.unregister();
+        console.log('[SW] Unregistered old service worker');
+      }
+      const cacheNames = await caches.keys();
+      for (const name of cacheNames) {
+        await caches.delete(name);
+        console.log('[SW] Deleted cache:', name);
+      }
+    } catch(e) { console.warn('[SW] cleanup error:', e); }
+    // Re-register fresh SW
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
