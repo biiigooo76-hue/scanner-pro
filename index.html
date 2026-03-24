@@ -4815,14 +4815,34 @@ async function runSearch() {
 
     // ===== Card-style results =====
     // ✅ v2.7 Orders sheet: [0:Timestamp, 1:OrderId, 2:Marketplace, 3:TrackingNo, 4:VideoUrl, 5:Remark, 6+:SKU items...]
+    // ✅ ข้อมูลเก่า (ก่อน v2.7): [0:Timestamp, 1:TrackingNo, 2:VideoUrl, 3:Remark, 4+:SKU items...]
     const cards = res.map(row => {
-      const date = String(row[0] || '');
-      const orderId_raw = String(row[1] || '').trim();
-      const marketplace_raw = String(row[2] || '').trim().toLowerCase();
-      const tracking = String(row[3] || '');
-      const videoUrl = String(row[4] || '');
-      const remark = String(row[5] || '');
-      const rawItems = row.slice(6).filter(c => c && String(c).trim() !== '');
+      // ✅ ตรวจสอบว่าเป็นโครงสร้างเก่าหรือใหม่
+      // โครงสร้างเก่า: row[2] เป็น VideoUrl (ขึ้นต้น http / no_video / upload_failed)
+      // โครงสร้างใหม่: row[2] เป็น Marketplace (shopee, tiktok, lazada, page365, หรือว่าง)
+      const col2 = String(row[2] || '').trim();
+      const isOldFormat = col2.startsWith('http') || col2 === 'no_video' || col2 === 'upload_failed';
+
+      let date, orderId_raw, marketplace_raw, tracking, videoUrl, remark, rawItems;
+      if (isOldFormat) {
+        // โครงสร้างเก่า: [Timestamp, Tracking, VideoUrl, Remark, ...items]
+        date = String(row[0] || '');
+        orderId_raw = '';
+        marketplace_raw = '';
+        tracking = String(row[1] || '');
+        videoUrl = String(row[2] || '');
+        remark = String(row[3] || '');
+        rawItems = row.slice(4).filter(c => c && String(c).trim() !== '' && !String(c).startsWith('http'));
+      } else {
+        // โครงสร้างใหม่ v2.7: [Timestamp, OrderId, Marketplace, Tracking, VideoUrl, Remark, Count, ...items]
+        date = String(row[0] || '');
+        orderId_raw = String(row[1] || '').trim();
+        marketplace_raw = col2.toLowerCase();
+        tracking = String(row[3] || '');
+        videoUrl = String(row[4] || '');
+        remark = String(row[5] || '');
+        rawItems = row.slice(7).filter(c => c && String(c).trim() !== '');
+      }
       const hasVideo = videoUrl && videoUrl.startsWith('http');
 
       // ✅ สร้าง link ตรวจสอบสถานะพัสดุ
@@ -4901,7 +4921,10 @@ async function runSearch() {
     th.innerHTML = '';
     tb.innerHTML = `<tr><td colspan="99" style="padding:0; border:none;">${cards}</td></tr>`;
 
-    const firstItems = res[0].slice(6).filter(i => i && String(i).trim() !== '');
+    // ✅ นับสินค้าจาก row แรก (รองรับทั้งโครงสร้างเก่า/ใหม่)
+    const r0col2 = String(res[0][2] || '').trim();
+    const r0old = r0col2.startsWith('http') || r0col2 === 'no_video' || r0col2 === 'upload_failed';
+    const firstItems = res[0].slice(r0old ? 4 : 7).filter(i => i && String(i).trim() !== '' && !String(i).startsWith('http'));
     if (firstItems.length > 0) speak(`จำนวนสินค้า ${firstItems.length} รายการค่ะ`);
     else speak("พบข้อมูลแต่ไม่มีรายการสินค้าค่ะ");
   } catch (err) {
