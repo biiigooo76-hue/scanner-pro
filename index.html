@@ -2639,7 +2639,9 @@ function _flushPendingUploads() {
             parcelId: job.pId,
             items: job.itemsArr,
             videoEvidence: "no_video",
-            remark: job.remarkNote || ""
+            remark: job.remarkNote || "",
+            orderId: job.orderId || "",
+            marketplace: job.marketplace || ""
           }),
           keepalive: true
         }).catch(() => {});
@@ -2666,7 +2668,9 @@ function _flushWithBeacon() {
         parcelId: job.pId,
         items: job.itemsArr,
         videoEvidence: "no_video",
-        remark: job.remarkNote || ""
+        remark: job.remarkNote || "",
+        orderId: job.orderId || "",
+        marketplace: job.marketplace || ""
       });
       const sent = navigator.sendBeacon(GAS_URL, new Blob([payload], { type: 'text/plain' }));
       console.log(`[Beacon] ${job.pId}: ${sent ? 'queued' : 'failed'}`);
@@ -2762,10 +2766,10 @@ updateSyncTimeBadge();
 // ============================================================
 const FAIL_QUEUE_KEY = 'failedUploadQueue';
 
-function saveToFailQueue(pId, itemsArr, remarkNote) {
+function saveToFailQueue(pId, itemsArr, remarkNote, orderId, marketplace) {
   try {
     const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
-    q.push({ pId, itemsArr, remarkNote, ts: Date.now() });
+    q.push({ pId, itemsArr, remarkNote, orderId: orderId || '', marketplace: marketplace || '', ts: Date.now() });
     localStorage.setItem(FAIL_QUEUE_KEY, JSON.stringify(q));
     console.warn(`[FailQueue] บันทึก ${pId} ไว้รอ retry`);
   } catch(e) { console.error('saveToFailQueue:', e); }
@@ -2790,7 +2794,9 @@ async function retryFailedUploads() {
         const res = await callGAS("saveData", {
           parcelId: job.pId, items: job.itemsArr,
           videoEvidence: "no_video",
-          remark: job.remarkNote || ""
+          remark: job.remarkNote || "",
+          orderId: job.orderId || "",
+          marketplace: job.marketplace || ""
         });
         if (isGasSuccess(res)) {
           console.log(`[FailQueue] retry ${job.pId} สำเร็จ`);
@@ -3636,6 +3642,14 @@ async function _doFinishWork(isManual = false) {
     const videoChunks = await stopCameraRecording();
     sessionParcels[snapshotParcelId] = { count, time: Date.now() };
 
+    // ✅ ดึง orderId + marketplace สำหรับส่งไป GAS
+    let snapshotOrderId = '', snapshotMarketplace = '';
+    try {
+      const infoMap = JSON.parse(localStorage.getItem('orderInfoMap') || '{}');
+      const info = infoMap[snapshotParcelId];
+      if (info) { snapshotOrderId = info.orderId || ''; snapshotMarketplace = info.marketplace || ''; }
+    } catch(e) {}
+
     // Reset UI ทันที ไม่รอ upload
     if (isManual) {
       await closeAppCompletely();
@@ -3648,7 +3662,7 @@ async function _doFinishWork(isManual = false) {
     speak(summaryMsg + (isManual ? "" : " สแกนพัสดุใบถัดไปได้เลยค่ะ"), false);
 
     // Upload เบื้องหลัง ไม่ await
-    processBackgroundUpload(snapshotParcelId, snapshotItems, videoChunks, snapshotRemark);
+    processBackgroundUpload(snapshotParcelId, snapshotItems, videoChunks, snapshotRemark, snapshotOrderId, snapshotMarketplace);
   } catch (err) {
     console.error('[finishWork error]', err);
     isFinishing = false;
@@ -3656,7 +3670,7 @@ async function _doFinishWork(isManual = false) {
   }
 }
 
-async function processBackgroundUpload(pId, itemsArr, chunks, remarkNote = '') {
+async function processBackgroundUpload(pId, itemsArr, chunks, remarkNote = '', orderId = '', marketplace = '') {
   try {
     // ดึงออกจาก Local Cache เมื่อแพ็กเสร็จ
     try {
@@ -3668,19 +3682,19 @@ async function processBackgroundUpload(pId, itemsArr, chunks, remarkNote = '') {
     } catch(e) { console.warn('[Cache] ล้าง localOrdersCache ไม่ได้:', e.message); }
 
     if (!navigator.onLine) {
-      saveToFailQueue(pId, itemsArr, remarkNote);
+      saveToFailQueue(pId, itemsArr, remarkNote, orderId, marketplace);
       updateFailQueueBadge();
       return;
     }
 
     const videoData = await convertChunksToBase64(chunks);
-    const res = await callGAS("saveData", { parcelId: pId, items: itemsArr, videoEvidence: videoData || "no_video", remark: remarkNote || "" });
+    const res = await callGAS("saveData", { parcelId: pId, items: itemsArr, videoEvidence: videoData || "no_video", remark: remarkNote || "", orderId, marketplace });
     if (!isGasSuccess(res)) throw new Error(res?.error || 'GAS response ไม่สำเร็จ');
     console.log(`[Background] บันทึก ${pId} สำเร็จ`);
     // หมายเหตุ: ไม่ต้อง retryFailedUploads ที่นี่ — interval 60s จัดการเอง เพื่อป้องกัน duplicate
   } catch (err) {
     console.error(`[Background Error] ${pId}:`, err);
-    saveToFailQueue(pId, itemsArr, remarkNote);
+    saveToFailQueue(pId, itemsArr, remarkNote, orderId, marketplace);
     updateFailQueueBadge();
   }
 }
@@ -4766,12 +4780,16 @@ async function runSearch() {
     document.getElementById("emptySearch").style.display = "none";
 
     // ===== Card-style results =====
-    // แต่ละ row: [วันที่, tracking, videoUrl?, ...items]
+    // ✅ v2.7 Orders sheet: [0:Timestamp, 1:OrderId, 2:Marketplace, 3:TrackingNo, 4:VideoUrl, 5:Remark, 6+:SKU items...]
     const cards = res.map(row => {
       const date = String(row[0] || '');
-      const tracking = String(row[1] || '');
-      const rawItems = row.slice(2).filter(c => c && !String(c).startsWith('http'));
-      const videoUrl = row.slice(2).find(c => c && String(c).startsWith('http'));
+      const orderId_raw = String(row[1] || '').trim();
+      const marketplace_raw = String(row[2] || '').trim().toLowerCase();
+      const tracking = String(row[3] || '');
+      const videoUrl = String(row[4] || '');
+      const remark = String(row[5] || '');
+      const rawItems = row.slice(6).filter(c => c && String(c).trim() !== '');
+      const hasVideo = videoUrl && videoUrl.startsWith('http');
 
       // ✅ สร้าง link ตรวจสอบสถานะพัสดุ
       const trackingLink = _buildTrackingLink(tracking);
@@ -4779,23 +4797,40 @@ async function runSearch() {
         ? `<a href="${escHtml(trackingLink)}" target="_blank" rel="noopener" style="color:var(--gold); font-weight:600; text-decoration:none; word-break:break-all;">${escHtml(tracking)} ↗</a>`
         : `<span style="font-weight:600; word-break:break-all;">${escHtml(tracking)}</span>`;
 
-      // ✅ ดึง orderInfo
+      // ✅ ดึง orderInfo จาก row โดยตรง (ไม่ต้องพึ่ง localStorage)
       let orderBadge = '';
-      try {
-        const infoMap = JSON.parse(localStorage.getItem('orderInfoMap') || '{}');
-        const info = infoMap[tracking];
-        if (info) {
-          const pColors = { shopee: '#ee4d2d', tiktok: '#333', lazada: '#0f146d', page365: '#25d366' };
-          const pName = { shopee: 'Shopee', tiktok: 'TikTok', lazada: 'Lazada', page365: 'Page365' };
-          const color = pColors[info.marketplace] || 'var(--gold)';
-          const name = pName[info.marketplace] || info.marketplace;
-          orderBadge = `<span style="display:inline-block; background:${color}; color:#fff; font-size:0.68rem; padding:1px 8px; border-radius:10px; margin-left:6px; vertical-align:middle;">${name}</span>
-            <div style="font-size:0.75rem; color:var(--text3); margin-top:2px;">คำสั่งซื้อ #${escHtml(info.orderId)}</div>`;
+      const pColors = { shopee: '#ee4d2d', tiktok: '#333', lazada: '#0f146d', page365: '#25d366' };
+      const pName = { shopee: 'Shopee', tiktok: 'TikTok', lazada: 'Lazada', page365: 'Page365' };
+      if (orderId_raw || marketplace_raw) {
+        const color = pColors[marketplace_raw] || 'var(--gold)';
+        const name = pName[marketplace_raw] || marketplace_raw || '';
+        if (name) {
+          orderBadge += `<span style="display:inline-block; background:${color}; color:#fff; font-size:0.68rem; padding:1px 8px; border-radius:10px; margin-left:6px; vertical-align:middle;">${name}</span>`;
         }
-      } catch(e) {}
+        if (orderId_raw) {
+          orderBadge += `<div style="font-size:0.75rem; color:var(--text3); margin-top:2px;">คำสั่งซื้อ #${escHtml(orderId_raw)}</div>`;
+        }
+      } else {
+        // fallback: ลองดูจาก localStorage (สำหรับข้อมูลเก่าที่ยังไม่มี OrderId ใน sheet)
+        try {
+          const infoMap = JSON.parse(localStorage.getItem('orderInfoMap') || '{}');
+          const info = infoMap[tracking];
+          if (info) {
+            const color = pColors[info.marketplace] || 'var(--gold)';
+            const name = pName[info.marketplace] || info.marketplace;
+            orderBadge = `<span style="display:inline-block; background:${color}; color:#fff; font-size:0.68rem; padding:1px 8px; border-radius:10px; margin-left:6px; vertical-align:middle;">${name}</span>
+              <div style="font-size:0.75rem; color:var(--text3); margin-top:2px;">คำสั่งซื้อ #${escHtml(info.orderId)}</div>`;
+          }
+        } catch(e) {}
+      }
+
+      // ✅ Remark badge
+      const remarkHtml = remark
+        ? `<div style="font-size:0.73rem; color:#c06030; margin-top:4px;">📝 ${escHtml(remark)}</div>`
+        : '';
 
       // ✅ Video button
-      const videoBtn = videoUrl
+      const videoBtn = hasVideo
         ? `<a href="${escHtml(videoUrl)}" target="_blank" class="btn-neu-gold" style="font-size:0.75rem; padding:4px 12px; text-decoration:none; display:inline-block; margin-top:6px;">▶ ดูคลิป</a>`
         : '';
 
@@ -4815,6 +4850,7 @@ async function runSearch() {
           <div>
             <div style="font-size:0.73rem; color:var(--text3);">📅 ${escHtml(date)}</div>
             <div style="margin-top:4px;">${trackingHtml}${orderBadge}</div>
+            ${remarkHtml}
           </div>
           <div style="text-align:right;">
             <div style="font-size:0.8rem; font-weight:600; color:var(--text2);">🧾 ${rawItems.length} ชิ้น</div>
@@ -4831,7 +4867,7 @@ async function runSearch() {
     th.innerHTML = '';
     tb.innerHTML = `<tr><td colspan="99" style="padding:0; border:none;">${cards}</td></tr>`;
 
-    const firstItems = res[0].slice(2).filter(i => i && !String(i).startsWith("http"));
+    const firstItems = res[0].slice(6).filter(i => i && String(i).trim() !== '');
     if (firstItems.length > 0) speak(`จำนวนสินค้า ${firstItems.length} รายการค่ะ`);
     else speak("พบข้อมูลแต่ไม่มีรายการสินค้าค่ะ");
   } catch (err) {
