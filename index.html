@@ -4233,7 +4233,8 @@ async function processFileUpload() {
       }
       for (const key in trackingMap) {
         const [tracking, sku] = key.split('|');
-        extractData.push({ marketplace, tracking, sku, qty: trackingMap[key], remark: remarkMap[tracking] || "" });
+        const oid = orderInfoMap[tracking]?.orderId || '';
+        extractData.push({ marketplace, tracking, sku, qty: trackingMap[key], remark: remarkMap[tracking] || "", orderId: oid });
       }
     } else {
       for (let i = startRow; i < rows.length; i++) {
@@ -4258,7 +4259,7 @@ async function processFileUpload() {
           }
           if (rv) remarkMap[tracking] = rv;
         }
-        extractData.push({ marketplace, tracking, sku, qty, remark: remarkMap[tracking] || "" });
+        extractData.push({ marketplace, tracking, sku, qty, remark: remarkMap[tracking] || "", orderId: orderInfoMap[tracking]?.orderId || "" });
       }
     }
 
