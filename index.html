@@ -4320,7 +4320,8 @@ async function processFileUpload() {
     const response = await callGAS("saveMarketplaceData", { data: extractData, fileName: file.name, marketplace });
     if (response && response.success) {
       const dupMsg = response.duplicateSkipped > 0 ? `\n(ข้ามซ้ำ ${response.duplicateSkipped} รายการ)` : '';
-      Swal.fire('สำเร็จ', `อัปโหลดสำเร็จ ${response.count} รายการ${dupMsg}`, 'success');
+      const bfMsg = response.backfilled > 0 ? `\n(เติม OrderId ย้อนหลัง ${response.backfilled} แถว)` : '';
+      Swal.fire('สำเร็จ', `อัปโหลดสำเร็จ ${response.count} รายการ${dupMsg}${bfMsg}`, 'success');
       document.getElementById('fileInput').value = "";
     } else {
       Swal.fire('ข้อผิดพลาด', 'บันทึกไม่สำเร็จ: ' + escHtml(response?.error || ''), 'error');
