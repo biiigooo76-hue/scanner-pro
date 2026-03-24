@@ -365,6 +365,8 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.15; } }
+    @keyframes chartBarGrow { from { opacity:0; transform:scaleY(0); transform-origin:bottom; } to { opacity:1; transform:scaleY(1); transform-origin:bottom; } }
+    @keyframes calFadeIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
 
     /* ===== LIST ITEMS ===== */
     .list-group-item {
@@ -2277,6 +2279,26 @@
         </div>
         <div id="dailyTargetEmpty" style="font-size:0.78rem; color:var(--text3); text-align:center; padding:4px 0;">
           ใส่ตัวเลขเป้าหมายเพื่อดู progress 👆
+        </div>
+      </div>
+      <!-- ✅ Daily Chart — กราฟแท่งรายวัน -->
+      <div id="dailyChartWrap" class="dash-table-card mb-3" style="display:none;">
+        <h6 class="fw-bold mb-2" style="color:var(--pink);"><span class="section-emoji">📊</span> กราฟรายวัน</h6>
+        <div id="dailyChartContainer" style="display:flex; align-items:flex-end; gap:3px; height:140px; padding:8px 0; overflow-x:auto;"></div>
+        <div style="display:flex; gap:14px; justify-content:center; margin-top:6px;">
+          <span style="font-size:0.68rem; color:var(--text3);">📦 <span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:var(--pink); vertical-align:middle;"></span> กล่อง</span>
+          <span style="font-size:0.68rem; color:var(--text3);">🎀 <span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:var(--gold); vertical-align:middle;"></span> ชิ้น</span>
+          <span style="font-size:0.68rem; color:var(--text3);">🎯 <span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:rgba(122,184,122,0.5); vertical-align:middle; border:1px dashed #7ab87a;"></span> เป้า</span>
+        </div>
+      </div>
+      <!-- ✅ Calendar — ปฏิทินสถานะรายวัน -->
+      <div id="dailyCalendarWrap" class="dash-table-card mb-3" style="display:none;">
+        <h6 class="fw-bold mb-2" style="color:var(--pink);"><span class="section-emoji">📅</span> ปฏิทินการแพ็ค</h6>
+        <div id="dailyCalendarGrid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; font-size:0.72rem;"></div>
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:8px; flex-wrap:wrap;">
+          <span style="font-size:0.65rem; color:var(--text3);">🟢 ถึงเป้า</span>
+          <span style="font-size:0.65rem; color:var(--text3);">🟡 ยังไม่ถึง</span>
+          <span style="font-size:0.65rem; color:var(--text3);">⚪ ไม่มีข้อมูล</span>
         </div>
       </div>
       <!-- Top Products Table -->
@@ -4681,6 +4703,10 @@ function renderReport(data, start, end) {
   
   // ✅ อัปเดต progress bar ด้วยข้อมูลจาก report
   updateDailyTargetUI();
+
+  // ✅ แสดงกราฟ + ปฏิทิน (เฉพาะเมื่อมีข้อมูลหลายวัน)
+  renderDailyChart(data.dailyBreakdown || {}, start, end);
+
   const container = document.getElementById('dashProductTable');
   const products  = data.allProducts || [];
   if (products.length === 0) {
@@ -5112,6 +5138,117 @@ function updateDailyTargetUI() {
   labelEl.textContent = done
     ? `🎉 ครบเป้าแล้ว! ${items}/${dailyTarget} ชิ้น`
     : `${items} / ${dailyTarget} ชิ้น (${pct}%)`;
+}
+
+// ============================================================
+// ✅ DAILY CHART + CALENDAR
+// ============================================================
+function renderDailyChart(dailyBreakdown, startStr, endStr) {
+  const chartWrap = document.getElementById('dailyChartWrap');
+  const calWrap = document.getElementById('dailyCalendarWrap');
+  if (!chartWrap || !calWrap) return;
+
+  const start = new Date(startStr); start.setHours(0,0,0,0);
+  const end = new Date(endStr); end.setHours(0,0,0,0);
+  const days = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    days.push(new Date(d).toISOString().slice(0, 10));
+  }
+
+  if (days.length < 2) { chartWrap.style.display = 'none'; calWrap.style.display = 'none'; return; }
+
+  const target = dailyTarget || 0;
+  const maxItems = Math.max(target, ...days.map(d => (dailyBreakdown[d]?.items || 0)));
+  const maxVal = Math.max(maxItems, 1);
+  const dayNames = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+  // ===== CHART =====
+  chartWrap.style.display = '';
+  const container = document.getElementById('dailyChartContainer');
+  const barWidth = days.length <= 7 ? 'flex:1; min-width:36px;' : `min-width:28px; width:${Math.max(28, 100/days.length)}%;`;
+
+  container.innerHTML = days.map((dayKey, idx) => {
+    const info = dailyBreakdown[dayKey] || { orders: 0, items: 0 };
+    const dt = new Date(dayKey + 'T00:00:00');
+    const dayLabel = `${dt.getDate()}`;
+    const dayNameLabel = dayNames[dt.getDay()];
+    const orderH = Math.max(2, (info.orders / maxVal) * 100);
+    const itemH = Math.max(2, (info.items / maxVal) * 100);
+    const isToday = dayKey === new Date().toISOString().slice(0, 10);
+    const metTarget = target > 0 && info.items >= target;
+    const delay = idx * 60;
+
+    return `<div style="${barWidth} display:flex; flex-direction:column; align-items:center; gap:2px;">
+      <div style="font-size:0.6rem; color:var(--text3); font-weight:500; min-height:14px;">${info.items || ''}</div>
+      <div style="display:flex; gap:2px; align-items:flex-end; height:90px; width:100%;">
+        <div style="flex:1; background:var(--pink); border-radius:3px 3px 0 0; height:${orderH}%; opacity:0;
+          animation: chartBarGrow 0.5s ${delay}ms cubic-bezier(0.34,1.56,0.64,1) forwards;"></div>
+        <div style="flex:1; background:var(--gold); border-radius:3px 3px 0 0; height:${itemH}%; opacity:0;
+          animation: chartBarGrow 0.5s ${delay + 80}ms cubic-bezier(0.34,1.56,0.64,1) forwards;"></div>
+      </div>
+      ${target > 0 ? `<div style="width:100%; height:1px; background:${metTarget ? '#7ab87a' : 'rgba(200,150,50,0.3)'}; margin:-${Math.max(2,(target/maxVal)*90)}px 0 0 0; position:relative;"></div>` : ''}
+      <div style="font-size:0.62rem; color:${isToday ? 'var(--pink)' : 'var(--text3)'}; font-weight:${isToday ? '700' : '400'}; line-height:1.2;">${dayLabel}</div>
+      <div style="font-size:0.55rem; color:var(--text3);">${dayNameLabel}</div>
+    </div>`;
+  }).join('');
+
+  // ===== CALENDAR =====
+  calWrap.style.display = '';
+  const grid = document.getElementById('dailyCalendarGrid');
+
+  // Header: วันในสัปดาห์
+  let calHtml = dayNames.map(n => `<div style="text-align:center; font-weight:600; color:var(--text3); padding:4px 0;">${n}</div>`).join('');
+
+  // หาวันแรกของเดือน/ช่วง
+  const firstDate = new Date(days[0] + 'T00:00:00');
+  const lastDate = new Date(days[days.length - 1] + 'T00:00:00');
+
+  // ถ้าเป็นเดือนเต็ม ใช้ 1 ถึงสิ้นเดือน ถ้าไม่ใช่ ใช้ช่วงที่เลือก
+  const calStart = new Date(firstDate);
+  const calEnd = new Date(lastDate);
+
+  // เติมช่องว่างก่อนวันแรก
+  const startDow = calStart.getDay();
+  for (let i = 0; i < startDow; i++) calHtml += '<div></div>';
+
+  const daySet = new Set(days);
+  for (let d = new Date(calStart); d <= calEnd; d.setDate(d.getDate() + 1)) {
+    const key = d.toISOString().slice(0, 10);
+    const info = dailyBreakdown[key] || null;
+    const isInRange = daySet.has(key);
+    const isToday = key === new Date().toISOString().slice(0, 10);
+
+    let bg = 'transparent';
+    let border = '1px solid rgba(0,0,0,0.06)';
+    let textColor = 'var(--text3)';
+    let statusDot = '';
+    let tooltip = '';
+
+    if (info && isInRange) {
+      const met = target > 0 && info.items >= target;
+      bg = met ? 'rgba(122,184,122,0.15)' : 'rgba(200,168,75,0.12)';
+      border = met ? '1.5px solid rgba(122,184,122,0.5)' : '1.5px solid rgba(200,168,75,0.3)';
+      textColor = 'var(--text)';
+      statusDot = met ? '🟢' : '🟡';
+      tooltip = `📦${info.orders} 🎀${info.items}`;
+    } else if (!isInRange) {
+      bg = 'rgba(0,0,0,0.02)';
+      textColor = 'rgba(0,0,0,0.15)';
+    }
+
+    const todayRing = isToday ? 'box-shadow:0 0 0 2px var(--pink);' : '';
+
+    calHtml += `<div style="background:${bg}; border:${border}; border-radius:8px; padding:4px 2px;
+      text-align:center; ${todayRing} position:relative; opacity:0;
+      animation: calFadeIn 0.3s ${(d.getDate() * 30)}ms ease forwards;"
+      title="${tooltip}">
+      <div style="font-weight:600; color:${textColor}; font-size:0.78rem;">${d.getDate()}</div>
+      ${info && isInRange ? `<div style="font-size:0.55rem; color:var(--text3); line-height:1.3;">📦${info.orders}<br>🎀${info.items}</div>
+      <div style="font-size:0.6rem; margin-top:1px;">${statusDot}</div>` : ''}
+    </div>`;
+  }
+
+  grid.innerHTML = calHtml;
 }
 </script>
 </body>
