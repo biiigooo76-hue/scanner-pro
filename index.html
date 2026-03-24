@@ -2261,12 +2261,12 @@
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
           <h6 class="fw-bold mb-0" style="color:var(--pink);">🎯 เป้าหมายวันนี้</h6>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input id="dailyTargetInput" type="number" min="0" max="999" placeholder="กล่อง/วัน"
+            <input id="dailyTargetInput" type="number" min="0" max="999" placeholder="ชิ้น/วัน"
               oninput="saveDailyTarget(this.value)"
               style="width:80px; padding:5px 8px; border-radius:10px; border:none; outline:none;
                      font-family:'Mitr',sans-serif; font-size:0.82rem; color:var(--text); text-align:center;
                      background:var(--bg); box-shadow:inset 3px 3px 7px var(--sd), inset -3px -3px 7px var(--sl);">
-            <span style="font-size:0.72rem; color:var(--text3);">กล่อง</span>
+            <span style="font-size:0.72rem; color:var(--text3);">ชิ้น</span>
           </div>
         </div>
         <div id="dailyTargetProgress" style="display:none;">
@@ -4679,6 +4679,8 @@ function renderReport(data, start, end) {
   document.getElementById('d-box').innerText  = data.totalOrders  ?? Object.keys(sessionParcels).length;
   document.getElementById('d-item').innerText = data.totalItems   ?? Object.entries(sessionParcels).reduce((a,[,v])=>a+(typeof v==='object'?v.count:v),0);
   
+  // ✅ อัปเดต progress bar ด้วยข้อมูลจาก report
+  updateDailyTargetUI();
   const container = document.getElementById('dashProductTable');
   const products  = data.allProducts || [];
   if (products.length === 0) {
@@ -5071,7 +5073,11 @@ function beep(type = 'ok') {
 // ===== DAILY TARGET =====
 let dailyTarget = 0;
 (function loadDailyTarget() {
-  try { dailyTarget = parseInt(localStorage.getItem('dailyTarget') || '0', 10) || 0; } catch(e) {}
+  try {
+    const saved = localStorage.getItem('dailyTarget');
+    dailyTarget = saved !== null ? (parseInt(saved, 10) || 0) : 120; // ✅ default 120
+    if (saved === null) localStorage.setItem('dailyTarget', '120');
+  } catch(e) { dailyTarget = 120; }
 })();
 
 function saveDailyTarget(v) {
@@ -5083,15 +5089,18 @@ function saveDailyTarget(v) {
 function updateDailyTargetUI() {
   const wrap = document.getElementById('dailyTargetWrap');
   if (!wrap) return;
-  const orders = Object.keys(sessionParcels).length;
+  // ✅ นับจำนวนชิ้นรวม: จาก sessionParcels + จาก report (ถ้ามี)
+  const sessionItems = Object.entries(sessionParcels).reduce((a, [, v]) => a + (typeof v === 'object' ? v.count : v), 0);
+  const reportItems = parseInt(document.getElementById('d-item')?.innerText) || 0;
+  const items = Math.max(sessionItems, reportItems); // ใช้ค่าที่มากกว่า (report รวมข้อมูลจาก GAS)
   const inp = document.getElementById('dailyTargetInput');
   if (inp && inp !== document.activeElement) inp.value = dailyTarget || '';
   if (!dailyTarget) {
     document.getElementById('dailyTargetProgress').style.display = 'none';
     return;
   }
-  const pct = Math.min(100, Math.round((orders / dailyTarget) * 100));
-  const done = orders >= dailyTarget;
+  const pct = Math.min(100, Math.round((items / dailyTarget) * 100));
+  const done = items >= dailyTarget;
   const progressEl = document.getElementById('dailyTargetProgress');
   const barEl = document.getElementById('dailyTargetBar');
   const labelEl = document.getElementById('dailyTargetLabel');
@@ -5101,8 +5110,8 @@ function updateDailyTargetUI() {
     ? 'linear-gradient(90deg,#7ab87a,#90d890)'
     : 'linear-gradient(90deg,var(--pink),#c89830)';
   labelEl.textContent = done
-    ? `🎉 ครบเป้าแล้ว! ${orders}/${dailyTarget} กล่อง`
-    : `${orders} / ${dailyTarget} กล่อง (${pct}%)`;
+    ? `🎉 ครบเป้าแล้ว! ${items}/${dailyTarget} ชิ้น`
+    : `${items} / ${dailyTarget} ชิ้น (${pct}%)`;
 }
 </script>
 </body>
