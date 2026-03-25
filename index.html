@@ -3311,6 +3311,18 @@ function onScanBuffer(text, result) {
   if (isFinishing) return;
 
   const upperText = text.trim().toUpperCase();
+
+  // ✅ ข้าม URL ร้านค้าตั้งแต่ต้น — ไม่ให้เข้า buffer เลย
+  const rawText = text.trim().toLowerCase();
+  if (rawText.includes("shoplinks.to") || rawText.includes("lamsangstore") ||
+      rawText.startsWith("http://") || rawText.startsWith("https://") ||
+      upperText.startsWith("HTTP://") || upperText.startsWith("HTTPS://")) {
+    if (rawText.includes("lamsangstore") || rawText.includes("shoplinks")) {
+      console.log('[Scan] ข้าม URL ร้านค้า:', text);
+      return;
+    }
+  }
+
   const isProduct = upperText.startsWith("B");
 
   // ✅ ล็อคสแกนสินค้าระหว่างพูด remark
@@ -3420,11 +3432,14 @@ async function processFinalScan(text) {
 
   // ✅ ข้าม QR ที่เป็น URL ร้านค้าบนซองพัสดุ — ไม่แจ้งเตือนอะไรเลย
   const lowerText = text.trim().toLowerCase();
-  if (lowerText.startsWith("http://") || lowerText.startsWith("https://")) {
-    if (lowerText.includes("shoplinks.to/lamsangstore")) {
-      console.log('[Scan] ข้าม URL ร้านค้า:', text);
-      return; // เงียบๆ ไม่แจ้งเตือน
-    }
+  if (lowerText.includes("shoplinks.to") || lowerText.includes("lamsangstore")) {
+    console.log('[Scan] ข้าม URL ร้านค้า:', text);
+    return;
+  }
+  // ข้าม URL อื่นๆ ทั้งหมด (ไม่ใช่รหัสพัสดุ)
+  if (lowerText.startsWith("http://") || lowerText.startsWith("https://") || lowerText.startsWith("www.")) {
+    console.log('[Scan] ข้าม URL:', text);
+    return;
   }
 
   // ✅ ตรวจสอบรหัสพัสดุด้วยระบบ detectCarrier
