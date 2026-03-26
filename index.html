@@ -4831,35 +4831,15 @@ async function runSearch() {
     document.getElementById("emptySearch").style.display = "none";
 
     // ===== Card-style results =====
-    // ✅ v2.7 Orders sheet: [0:Timestamp, 1:OrderId, 2:Marketplace, 3:TrackingNo, 4:VideoUrl, 5:Remark, 6+:SKU items...]
-    // ✅ ข้อมูลเก่า (ก่อน v2.7): [0:Timestamp, 1:TrackingNo, 2:VideoUrl, 3:Remark, 4+:SKU items...]
+    // ✅ [A:Timestamp, B:OrderId, C:Marketplace, D:Tracking, E:VideoUrl, F:Remark, G+:items]
     const cards = res.map(row => {
-      // ✅ ตรวจสอบว่าเป็นโครงสร้างเก่าหรือใหม่
-      // โครงสร้างเก่า: row[2] เป็น VideoUrl (ขึ้นต้น http / no_video / upload_failed)
-      // โครงสร้างใหม่: row[2] เป็น Marketplace (shopee, tiktok, lazada, page365, หรือว่าง)
-      const col2 = String(row[2] || '').trim();
-      const isOldFormat = col2.startsWith('http') || col2 === 'no_video' || col2 === 'upload_failed';
-
-      let date, orderId_raw, marketplace_raw, tracking, videoUrl, remark, rawItems;
-      if (isOldFormat) {
-        // โครงสร้างเก่า: [Timestamp, Tracking, VideoUrl, Remark, ...items]
-        date = String(row[0] || '');
-        orderId_raw = '';
-        marketplace_raw = '';
-        tracking = String(row[1] || '');
-        videoUrl = String(row[2] || '');
-        remark = String(row[3] || '');
-        rawItems = row.slice(4).filter(c => c && String(c).trim() !== '' && !String(c).startsWith('http'));
-      } else {
-        // โครงสร้างใหม่ v2.7: [Timestamp, OrderId, Marketplace, Tracking, VideoUrl, Remark, Count, ...items]
-        date = String(row[0] || '');
-        orderId_raw = String(row[1] || '').trim();
-        marketplace_raw = col2.toLowerCase();
-        tracking = String(row[3] || '');
-        videoUrl = String(row[4] || '');
-        remark = String(row[5] || '');
-        rawItems = row.slice(7).filter(c => c && String(c).trim() !== '');
-      }
+      const date = String(row[0] || '');
+      const orderId_raw = String(row[1] || '').trim();
+      const marketplace_raw = String(row[2] || '').trim().toLowerCase();
+      const tracking = String(row[3] || '');
+      const videoUrl = String(row[4] || '');
+      const remark = String(row[5] || '');
+      const rawItems = row.slice(6).filter(c => c && String(c).trim() !== '');
       const hasVideo = videoUrl && videoUrl.startsWith('http');
 
       // ✅ สร้าง link ตรวจสอบสถานะพัสดุ
@@ -4868,31 +4848,17 @@ async function runSearch() {
         ? `<a href="${escHtml(trackingLink)}" target="_blank" rel="noopener" style="color:var(--gold); font-weight:600; text-decoration:none; word-break:break-all;">${escHtml(tracking)} ↗</a>`
         : `<span style="font-weight:600; word-break:break-all;">${escHtml(tracking)}</span>`;
 
-      // ✅ ดึง orderInfo จาก row โดยตรง (ไม่ต้องพึ่ง localStorage)
+      // ✅ ดึง orderInfo จาก row โดยตรง
       let orderBadge = '';
       const pColors = { shopee: '#ee4d2d', tiktok: '#333', lazada: '#0f146d', page365: '#25d366' };
       const pName = { shopee: 'Shopee', tiktok: 'TikTok', lazada: 'Lazada', page365: 'Page365' };
-      if (orderId_raw || marketplace_raw) {
-        const color = pColors[marketplace_raw] || 'var(--gold)';
-        const name = pName[marketplace_raw] || marketplace_raw || '';
-        if (name) {
-          orderBadge += `<span style="display:inline-block; background:${color}; color:#fff; font-size:0.68rem; padding:1px 8px; border-radius:10px; margin-left:6px; vertical-align:middle;">${name}</span>`;
-        }
-        if (orderId_raw) {
-          orderBadge += `<div style="font-size:0.75rem; color:var(--text3); margin-top:2px;">คำสั่งซื้อ #${escHtml(orderId_raw)}</div>`;
-        }
-      } else {
-        // fallback: ลองดูจาก localStorage (สำหรับข้อมูลเก่าที่ยังไม่มี OrderId ใน sheet)
-        try {
-          const infoMap = JSON.parse(localStorage.getItem('orderInfoMap') || '{}');
-          const info = infoMap[tracking];
-          if (info) {
-            const color = pColors[info.marketplace] || 'var(--gold)';
-            const name = pName[info.marketplace] || info.marketplace;
-            orderBadge = `<span style="display:inline-block; background:${color}; color:#fff; font-size:0.68rem; padding:1px 8px; border-radius:10px; margin-left:6px; vertical-align:middle;">${name}</span>
-              <div style="font-size:0.75rem; color:var(--text3); margin-top:2px;">คำสั่งซื้อ #${escHtml(info.orderId)}</div>`;
-          }
-        } catch(e) {}
+      if (marketplace_raw) {
+        const color = pColors[marketplace_raw] || '#c8a84b';
+        const name = pName[marketplace_raw] || marketplace_raw;
+        orderBadge += `<span style="display:inline-block; background:${color}; color:#fff; font-size:0.68rem; padding:1px 8px; border-radius:10px; margin-left:6px; vertical-align:middle;">${name}</span>`;
+      }
+      if (orderId_raw) {
+        orderBadge += `<div style="font-size:0.75rem; color:var(--text3); margin-top:2px;">คำสั่งซื้อ #${escHtml(orderId_raw)}</div>`;
       }
 
       // ✅ Remark badge
@@ -4938,10 +4904,7 @@ async function runSearch() {
     th.innerHTML = '';
     tb.innerHTML = `<tr><td colspan="99" style="padding:0; border:none;">${cards}</td></tr>`;
 
-    // ✅ นับสินค้าจาก row แรก (รองรับทั้งโครงสร้างเก่า/ใหม่)
-    const r0col2 = String(res[0][2] || '').trim();
-    const r0old = r0col2.startsWith('http') || r0col2 === 'no_video' || r0col2 === 'upload_failed';
-    const firstItems = res[0].slice(r0old ? 4 : 7).filter(i => i && String(i).trim() !== '' && !String(i).startsWith('http'));
+    const firstItems = res[0].slice(6).filter(i => i && String(i).trim() !== '');
     if (firstItems.length > 0) speak(`จำนวนสินค้า ${firstItems.length} รายการค่ะ`);
     else speak("พบข้อมูลแต่ไม่มีรายการสินค้าค่ะ");
   } catch (err) {
