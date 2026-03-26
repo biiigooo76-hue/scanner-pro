@@ -4831,7 +4831,9 @@ async function runSearch() {
     document.getElementById("emptySearch").style.display = "none";
 
     // ===== Card-style results =====
-    // ✅ [A:Timestamp, B:OrderId, C:Marketplace, D:Tracking, E:VideoUrl, F:Remark, G+:items]
+    // ✅ [A:Timestamp, B:OrderId, C:Marketplace, D:Tracking, E:VideoUrl, F:Remark, G:จำนวน/สินค้า, H+:สินค้า...]
+    // Search sheet มี col G = จำนวน (ตัวเลข) → items เริ่ม index 7
+    // Orders sheet ไม่มี → items เริ่ม index 6
     const cards = res.map(row => {
       const date = String(row[0] || '');
       const orderId_raw = String(row[1] || '').trim();
@@ -4839,7 +4841,11 @@ async function runSearch() {
       const tracking = String(row[3] || '');
       const videoUrl = String(row[4] || '');
       const remark = String(row[5] || '');
-      const rawItems = row.slice(6).filter(c => c && String(c).trim() !== '');
+
+      // ✅ ถ้า col G เป็นตัวเลขล้วน → เป็น "จำนวน" (Search sheet) → items เริ่ม index 7
+      const colG = String(row[6] || '').trim();
+      const hasCountCol = /^\d+$/.test(colG);
+      const rawItems = row.slice(hasCountCol ? 7 : 6).filter(c => c && String(c).trim() !== '');
       const hasVideo = videoUrl && videoUrl.startsWith('http');
 
       // ✅ สร้าง link ตรวจสอบสถานะพัสดุ
@@ -4904,7 +4910,9 @@ async function runSearch() {
     th.innerHTML = '';
     tb.innerHTML = `<tr><td colspan="99" style="padding:0; border:none;">${cards}</td></tr>`;
 
-    const firstItems = res[0].slice(6).filter(i => i && String(i).trim() !== '');
+    const firstColG = String(res[0][6] || '').trim();
+    const firstHasCount = /^\d+$/.test(firstColG);
+    const firstItems = res[0].slice(firstHasCount ? 7 : 6).filter(i => i && String(i).trim() !== '');
     if (firstItems.length > 0) speak(`จำนวนสินค้า ${firstItems.length} รายการค่ะ`);
     else speak("พบข้อมูลแต่ไม่มีรายการสินค้าค่ะ");
   } catch (err) {
