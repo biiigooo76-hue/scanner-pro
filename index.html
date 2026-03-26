@@ -1989,23 +1989,24 @@
 
 <!-- Offline Banner -->
 <div id="offlineBanner" style="
-  display:none; position:fixed; top:var(--topbar-h); left:0; right:0; z-index:199;
+  display:none; position:fixed; top:calc(var(--topbar-h) + 8px); right:12px; z-index:199;
   background:linear-gradient(135deg,#d88888,#c07070);
-  color:white; text-align:center;
-  padding:8px 16px; font-size:0.8rem; font-family:'Mitr',sans-serif;
-  box-shadow:0 2px 12px rgba(0,0,0,0.2);">
-  🔴 <strong>ออฟไลน์</strong> — ข้อมูลจะถูกส่งอัตโนมัติเมื่อออนไลน์
-  <span id="offlineQueueCount" style="margin-left:6px; opacity:0.85;"></span>
+  color:white; border-radius:12px;
+  padding:6px 14px; font-size:0.72rem; font-family:'Mitr',sans-serif;
+  box-shadow:0 3px 12px rgba(0,0,0,0.25); max-width:240px;
+  animation:calFadeIn 0.3s ease;">
+  🔴 ออฟไลน์ <span id="offlineQueueCount" style="opacity:0.85;"></span>
 </div>
 
 <!-- Queue Pending Banner (online แต่มี queue ค้าง) -->
 <div id="queueBanner" onclick="showQueueModal()" style="
-  display:none; position:fixed; top:var(--topbar-h); left:0; right:0; z-index:199;
+  display:none; position:fixed; top:calc(var(--topbar-h) + 8px); right:12px; z-index:199;
   background:linear-gradient(135deg,#d4a843,#c89830);
-  color:white; text-align:center; cursor:pointer;
-  padding:8px 16px; font-size:0.8rem; font-family:'Mitr',sans-serif;
-  box-shadow:0 2px 12px rgba(0,0,0,0.2);">
-  ⏳ มี <span id="queueBannerCount">0</span> รายการรอ sync — <u>แตะเพื่อดูและ sync</u>
+  color:white; cursor:pointer; border-radius:12px;
+  padding:6px 14px; font-size:0.72rem; font-family:'Mitr',sans-serif;
+  box-shadow:0 3px 12px rgba(0,0,0,0.25); max-width:220px;
+  animation:calFadeIn 0.3s ease;">
+  ⏳ รอ sync <span id="queueBannerCount">0</span> รายการ
 </div>
 
 <!-- Queue Modal -->
@@ -2719,27 +2720,23 @@ window.addEventListener('beforeunload', (e) => {
 function updateNetworkBadge() {
   const badge = document.getElementById('networkBadge');
   const banner = document.getElementById('offlineBanner');
-  const pageContent = document.querySelector('.page-content');
   if (!badge) return;
   if (navigator.onLine) {
     badge.style.color = 'var(--success)';
     badge.textContent = '🟢 ออนไลน์';
     if (banner) banner.style.display = 'none';
-    if (pageContent) pageContent.style.marginTop = '';
     retryFailedUploads();
   } else {
     badge.style.color = 'var(--danger)';
     badge.textContent = '🔴 ออฟไลน์';
     if (banner) {
       banner.style.display = 'block';
-      // แสดง queue count ถ้ามี
       try {
         const q = JSON.parse(localStorage.getItem('failedUploadQueue') || '[]');
         const qc = document.getElementById('offlineQueueCount');
-        if (qc) qc.textContent = q.length > 0 ? `(มี ${q.length} รายการรอส่ง)` : '';
+        if (qc) qc.textContent = q.length > 0 ? `(${q.length} รายการรอ)` : '';
       } catch(e) {}
     }
-    if (pageContent) pageContent.style.marginTop = '36px';
   }
 }
 window.addEventListener('online',  updateNetworkBadge);
@@ -2874,14 +2871,11 @@ function updateFailQueueBadge() {
   const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
   const badge = document.getElementById('networkBadge');
   const queueBanner = document.getElementById('queueBanner');
-  const pageContent = document.querySelector('.page-content');
   if (q.length > 0 && navigator.onLine) {
-    // แสดง queue banner แทน network badge
-    if (badge) { badge.style.background = '#faf0d0'; badge.style.color = '#8a6820'; badge.textContent = `⏳ รอ sync ${q.length}`; }
+    if (badge) { badge.style.background = '#faf0d0'; badge.style.color = '#8a6820'; badge.textContent = `⏳ ${q.length}`; }
     if (queueBanner) {
       document.getElementById('queueBannerCount').textContent = q.length;
       queueBanner.style.display = 'block';
-      if (pageContent) pageContent.style.marginTop = 'calc(var(--topbar-h) + 36px)';
     }
   } else {
     if (queueBanner) queueBanner.style.display = 'none';
