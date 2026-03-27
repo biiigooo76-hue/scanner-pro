@@ -2608,10 +2608,13 @@ function touchWakeLock() {
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
-    // หยุดกล้องบันทึกวิดีโอทันทีเมื่อออกจากแอป
-    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      try { if (mediaRecorder._stopDraw) mediaRecorder._stopDraw(); mediaRecorder.stop(); isRecording = false; } catch(e) {}
+    // ✅ ถ้า finishWork กำลัง await stopCameraRecording → ปล่อยให้มันจัดการเอง
+    // อย่าไปแย่ง stop เพราะจะทำให้ Promise resolve ผิดจังหวะ
+    if (!isFinishing) {
+      if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        try { if (mediaRecorder._stopDraw) mediaRecorder._stopDraw(); mediaRecorder.stop(); isRecording = false; } catch(e) {}
+      }
     }
     // หยุดสแกนเนอร์ชั่วคราว
     if (scanner) { try { scanner.pause(true); } catch(e) {} }
@@ -2633,8 +2636,11 @@ document.addEventListener('visibilitychange', () => {
 
 // pagehide — ปิดกล้อง + flush ข้อมูลด้วย sendBeacon (เชื่อถือได้กว่า fetch ตอนปิด tab)
 window.addEventListener('pagehide', (e) => {
-  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-  if (scanner) { try { scanner.clear(); } catch(e) {} }
+  // ✅ ถ้า finishWork กำลัง process อยู่ → ปล่อยให้มันจัดการกล้องเอง
+  if (!isFinishing) {
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+    if (scanner) { try { scanner.clear(); } catch(e) {} }
+  }
   _flushWithBeacon();
 });
 
@@ -2650,7 +2656,6 @@ function _flushPendingUploads() {
     const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
     if (q.length === 0) return;
     console.log(`[Flush] พยายามส่ง ${q.length} รายการก่อนปิดแอป...`);
-    const remaining = [];
     for (const job of q) {
       if (_flushedIds.has(job.pId)) continue;
       _flushedIds.add(job.pId);
@@ -2672,11 +2677,12 @@ function _flushPendingUploads() {
         }).catch(() => {});
         console.log(`[Flush] ส่ง ${job.pId} ด้วย fetch+keepalive`);
       } catch(e) {
-        remaining.push(job);
+        // fetch throw → ไม่ต้องทำอะไร
       }
     }
-    // เก็บเฉพาะที่ส่งไม่ได้ → retry รอบหน้าเปิดแอป
-    localStorage.setItem(FAIL_QUEUE_KEY, JSON.stringify(remaining));
+    // ✅ ไม่ล้าง queue ตรงนี้! เพราะ fetch+keepalive ไม่มี callback ยืนยัน
+    // ให้ _flushWithBeacon (pagehide) หรือ retryFailedUploads (visible) จัดการ
+    // _flushedIds จะป้องกัน duplicate ส่งซ้ำ
   } catch(e) { console.error('[Flush]', e); }
 }
 
@@ -2684,6 +2690,7 @@ function _flushWithBeacon() {
   try {
     const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
     if (q.length === 0) return;
+    const remaining = [];
     for (const job of q) {
       if (_flushedIds.has(job.pId)) continue;
       _flushedIds.add(job.pId);
@@ -2699,9 +2706,11 @@ function _flushWithBeacon() {
       });
       const sent = navigator.sendBeacon(GAS_URL, new Blob([payload], { type: 'text/plain' }));
       console.log(`[Beacon] ${job.pId}: ${sent ? 'queued' : 'failed'}`);
+      // ✅ ถ้า beacon ส่งไม่ได้ → เก็บไว้ retry รอบหน้า
+      if (!sent) remaining.push(job);
     }
-    // ล้าง queue ถ้า beacon สำเร็จ
-    localStorage.setItem(FAIL_QUEUE_KEY, '[]');
+    // ✅ เก็บเฉพาะที่ส่งไม่ได้ แทนที่จะล้างทั้งหมด
+    localStorage.setItem(FAIL_QUEUE_KEY, JSON.stringify(remaining));
   } catch(e) { console.error('[Beacon]', e); }
 }
 
@@ -2802,13 +2811,14 @@ async function retryFailedUploads() {
   _isRetrying = true;
   try {
     const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
-    if (q.length === 0) { _isRetrying = false; return; }
+    if (q.length === 0) { _isRetrying = false; _flushedIds.clear(); return; }
     console.log(`[FailQueue] กำลัง retry ${q.length} รายการ...`);
     const remaining = [];
     for (const job of q) {
-      // ข้าม job ที่บันทึกในเซสชันนี้แล้ว (ป้องกัน duplicate)
-      if (sessionParcels[job.pId]) {
-        console.log(`[FailQueue] ข้าม ${job.pId} — บันทึกในเซสชันนี้แล้ว`);
+      // ✅ ข้าม job ที่ _flushedIds ส่งไปแล้ว (flush ระหว่าง visibilitychange)
+      // แต่ไม่ข้าม sessionParcels เฉยๆ เพราะ upload อาจ fail ก่อนที่จะ mark session
+      if (_flushedIds.has(job.pId) && sessionParcels[job.pId]) {
+        console.log(`[FailQueue] ข้าม ${job.pId} — flushed + session แล้ว`);
         continue;
       }
       try {
@@ -2821,6 +2831,7 @@ async function retryFailedUploads() {
         });
         if (isGasSuccess(res)) {
           console.log(`[FailQueue] retry ${job.pId} สำเร็จ`);
+          _flushedIds.delete(job.pId); // ✅ ล้าง flushedId เมื่อ retry สำเร็จ
         } else { remaining.push(job); }
       } catch(e) { remaining.push(job); }
     }
@@ -3129,18 +3140,43 @@ async function startCameraRecording() {
 function stopCameraRecording() {
   return new Promise((resolve) => {
     if (!mediaRecorder || mediaRecorder.state === "inactive") {
+      isRecording = false;
       if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-      resolve([]); return;
+      const snapshot = [...recordedChunks];
+      document.getElementById('rec-label').innerText = "";
+      resolve(snapshot); return;
     }
     if (mediaRecorder._stopDraw) mediaRecorder._stopDraw(); // หยุด drawOverlay loop
-    mediaRecorder.addEventListener('stop', () => {
+
+    // ✅ timeout ป้องกัน Promise ค้างถาวร (เช่น visibilitychange stop ไปก่อน)
+    let resolved = false;
+    const safeResolve = (chunks) => {
+      if (resolved) return;
+      resolved = true;
       isRecording = false;
-      const snapshot = [...recordedChunks];
       if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
       document.getElementById('rec-label').innerText = "";
-      resolve(snapshot);
+      resolve(chunks);
+    };
+
+    mediaRecorder.addEventListener('stop', () => {
+      safeResolve([...recordedChunks]);
     }, { once: true });
-    mediaRecorder.stop();
+
+    // ✅ ถ้า 'stop' event ไม่ fire ภายใน 3 วินาที → resolve ด้วย chunks ที่มีอยู่
+    setTimeout(() => {
+      if (!resolved) {
+        console.warn('[stopCameraRecording] timeout — force resolve');
+        safeResolve([...recordedChunks]);
+      }
+    }, 3000);
+
+    try {
+      mediaRecorder.stop();
+    } catch(e) {
+      console.warn('[stopCameraRecording] stop error:', e.message);
+      safeResolve([...recordedChunks]);
+    }
   });
 }
 
@@ -3665,6 +3701,15 @@ async function _doFinishWork(isManual = false) {
   }
   isFinishing = true;
   clearInactivityWatch();
+
+  // ✅ safety timeout: ถ้า isFinishing ค้างนานเกิน 20 วินาที → ปลดล็อคอัตโนมัติ
+  const finishSafetyTimer = setTimeout(() => {
+    if (isFinishing) {
+      console.error('[_doFinishWork] safety timeout — force unlock isFinishing');
+      isFinishing = false;
+    }
+  }, 20000);
+
   const snapshotItems = [...items];
   const snapshotParcelId = pId;
   const snapshotRemark = currentRemark;
@@ -3691,6 +3736,7 @@ async function _doFinishWork(isManual = false) {
       setStatus("✔ พร้อมรับพัสดุใบถัดไป", "success");
     }
     isFinishing = false;
+    clearTimeout(finishSafetyTimer);
     lastScanTime = Date.now();
     speak(summaryMsg + (isManual ? "" : " สแกนพัสดุใบถัดไปได้เลยค่ะ"), false);
 
@@ -3699,6 +3745,7 @@ async function _doFinishWork(isManual = false) {
   } catch (err) {
     console.error('[finishWork error]', err);
     isFinishing = false;
+    clearTimeout(finishSafetyTimer);
     speak("เกิดข้อผิดพลาด กรุณาลองใหม่ค่ะ", false);
   }
 }
