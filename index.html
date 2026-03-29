@@ -3348,6 +3348,8 @@ async function _refreshOrderCacheBackground() {
   } catch(e) { console.warn('[Cache] _refreshOrderCacheBackground error:', e.message); }
   _isRefreshingOrders = false;
 }
+
+function setupScanUI() {
   try {
     document.getElementById("app-header").style.display = "none";
     document.getElementById("app-tabs").style.display = "none";
