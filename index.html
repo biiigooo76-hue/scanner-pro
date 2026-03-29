@@ -2663,10 +2663,9 @@ function _flushPendingUploads() {
     if (q.length === 0) return;
     console.log(`[Flush] พยายามส่ง ${q.length} รายการก่อนปิดแอป...`);
     for (const job of q) {
-      if (_flushedIds.has(job.pId)) continue;
+      if (_flushedIds.has(job.pId) || _isSent(job.pId)) continue;
       _flushedIds.add(job.pId);
       try {
-        // fetch + keepalive: บราวเซอร์จะส่งต่อแม้ปิด tab แล้ว (limit 64KB)
         fetch(GAS_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
@@ -2674,7 +2673,7 @@ function _flushPendingUploads() {
             action: "saveData",
             parcelId: job.pId,
             items: job.itemsArr,
-            videoEvidence: "no_video",
+            videoEvidence: job.videoBase64 || "no_video",
             remark: job.remarkNote || "",
             orderId: job.orderId || "",
             marketplace: job.marketplace || ""
@@ -2682,13 +2681,9 @@ function _flushPendingUploads() {
           keepalive: true
         }).catch(() => {});
         console.log(`[Flush] ส่ง ${job.pId} ด้วย fetch+keepalive`);
-      } catch(e) {
-        // fetch throw → ไม่ต้องทำอะไร
-      }
+      } catch(e) {}
     }
-    // ✅ ไม่ล้าง queue ตรงนี้! เพราะ fetch+keepalive ไม่มี callback ยืนยัน
-    // ให้ _flushWithBeacon (pagehide) หรือ retryFailedUploads (visible) จัดการ
-    // _flushedIds จะป้องกัน duplicate ส่งซ้ำ
+    // ✅ ไม่ล้าง queue ตรงนี้ — retryFailedUploads จะ mark sent แล้วลบออก
   } catch(e) { console.error('[Flush]', e); }
 }
 
@@ -2698,24 +2693,22 @@ function _flushWithBeacon() {
     if (q.length === 0) return;
     const remaining = [];
     for (const job of q) {
-      if (_flushedIds.has(job.pId)) continue;
+      if (_isSent(job.pId)) continue; // ✅ GAS ยืนยันแล้ว ไม่ส่งซ้ำ
+      if (_flushedIds.has(job.pId)) { remaining.push(job); continue; }
       _flushedIds.add(job.pId);
-      // sendBeacon: เชื่อถือได้ที่สุดตอนปิด tab — browser รับประกันว่าจะส่ง
       const payload = JSON.stringify({
         action: "saveData",
         parcelId: job.pId,
         items: job.itemsArr,
-        videoEvidence: "no_video",
+        videoEvidence: job.videoBase64 || "no_video",
         remark: job.remarkNote || "",
         orderId: job.orderId || "",
         marketplace: job.marketplace || ""
       });
       const sent = navigator.sendBeacon(GAS_URL, new Blob([payload], { type: 'text/plain' }));
       console.log(`[Beacon] ${job.pId}: ${sent ? 'queued' : 'failed'}`);
-      // ✅ ถ้า beacon ส่งไม่ได้ → เก็บไว้ retry รอบหน้า
       if (!sent) remaining.push(job);
     }
-    // ✅ เก็บเฉพาะที่ส่งไม่ได้ แทนที่จะล้างทั้งหมด
     localStorage.setItem(FAIL_QUEUE_KEY, JSON.stringify(remaining));
   } catch(e) { console.error('[Beacon]', e); }
 }
@@ -2801,11 +2794,39 @@ updateSyncTimeBadge();
 // 5. FAILED UPLOAD QUEUE — retry เมื่อออนไลน์
 // ============================================================
 const FAIL_QUEUE_KEY = 'failedUploadQueue';
+const SENT_KEY = 'sentParcels'; // ✅ dedup guard: pId ที่ GAS ยืนยันสำเร็จแล้ว
 
-function saveToFailQueue(pId, itemsArr, remarkNote, orderId, marketplace) {
+function _markSent(pId) {
   try {
+    const s = JSON.parse(localStorage.getItem(SENT_KEY) || '{}');
+    s[pId] = Date.now();
+    // เก็บไว้ 24 ชั่วโมง
+    const cutoff = Date.now() - 86400000;
+    for (const k in s) { if (s[k] < cutoff) delete s[k]; }
+    localStorage.setItem(SENT_KEY, JSON.stringify(s));
+  } catch(e) {}
+}
+
+function _isSent(pId) {
+  try {
+    const s = JSON.parse(localStorage.getItem(SENT_KEY) || '{}');
+    return !!s[pId];
+  } catch(e) { return false; }
+}
+
+function saveToFailQueue(pId, itemsArr, remarkNote, orderId, marketplace, videoBase64) {
+  try {
+    if (_isSent(pId)) {
+      console.log(`[FailQueue] ข้าม ${pId} — ส่ง GAS สำเร็จแล้ว`);
+      return;
+    }
     const q = JSON.parse(localStorage.getItem(FAIL_QUEUE_KEY) || '[]');
-    q.push({ pId, itemsArr, remarkNote, orderId: orderId || '', marketplace: marketplace || '', ts: Date.now() });
+    // ป้องกัน pId ซ้ำใน queue
+    if (q.some(j => j.pId === pId)) {
+      console.log(`[FailQueue] ${pId} มีใน queue อยู่แล้ว ไม่เพิ่มซ้ำ`);
+      return;
+    }
+    q.push({ pId, itemsArr, remarkNote, orderId: orderId || '', marketplace: marketplace || '', videoBase64: videoBase64 || '', ts: Date.now() });
     localStorage.setItem(FAIL_QUEUE_KEY, JSON.stringify(q));
     console.warn(`[FailQueue] บันทึก ${pId} ไว้รอ retry`);
   } catch(e) { console.error('saveToFailQueue:', e); }
@@ -2821,23 +2842,23 @@ async function retryFailedUploads() {
     console.log(`[FailQueue] กำลัง retry ${q.length} รายการ...`);
     const remaining = [];
     for (const job of q) {
-      // ✅ ข้าม job ที่ _flushedIds ส่งไปแล้ว (flush ระหว่าง visibilitychange)
-      // แต่ไม่ข้าม sessionParcels เฉยๆ เพราะ upload อาจ fail ก่อนที่จะ mark session
-      if (_flushedIds.has(job.pId) && sessionParcels[job.pId]) {
-        console.log(`[FailQueue] ข้าม ${job.pId} — flushed + session แล้ว`);
+      // ✅ ถ้า GAS ยืนยันแล้ว → ลบออกจาก queue ทันที
+      if (_isSent(job.pId)) {
+        console.log(`[FailQueue] ข้าม ${job.pId} — sent แล้ว`);
         continue;
       }
       try {
         const res = await callGAS("saveData", {
           parcelId: job.pId, items: job.itemsArr,
-          videoEvidence: "no_video",
+          videoEvidence: job.videoBase64 || "no_video",
           remark: job.remarkNote || "",
           orderId: job.orderId || "",
           marketplace: job.marketplace || ""
         });
         if (isGasSuccess(res)) {
           console.log(`[FailQueue] retry ${job.pId} สำเร็จ`);
-          _flushedIds.delete(job.pId); // ✅ ล้าง flushedId เมื่อ retry สำเร็จ
+          _markSent(job.pId);
+          _flushedIds.delete(job.pId);
         } else { remaining.push(job); }
       } catch(e) { remaining.push(job); }
     }
@@ -3293,7 +3314,40 @@ async function fetchBackgroundCache(cacheKey, cacheTimeKey) {
   return gotProducts;
 }
 
-function setupScanUI() {
+// ✅ v2.8: refresh เฉพาะ orders จาก GAS (ไม่ดึง product ซ้ำ — ประหยัด quota)
+// เรียกหลัง save สำเร็จ เพื่อให้ localOrdersCache สะท้อนสถานะล่าสุดจาก Sheet
+let _isRefreshingOrders = false;
+async function _refreshOrderCacheBackground() {
+  if (_isRefreshingOrders) return; // ไม่ยิงซ้อนกัน
+  _isRefreshingOrders = true;
+  try {
+    const orderRes = await callGAS("getAllPendingOrders").catch(() => null);
+    if (orderRes && !orderRes.error) {
+      localStorage.setItem('localOrdersCache', JSON.stringify(orderRes));
+      // sync remark + orderInfo
+      const remarkFromOrders = {}, infoFromOrders = {};
+      for (const tracking in orderRes) {
+        const its = orderRes[tracking];
+        if (Array.isArray(its)) {
+          const remark = its.find(i => i.remark)?.remark || '';
+          if (remark) remarkFromOrders[tracking] = remark;
+          const first = its[0];
+          if (first?.marketplace) infoFromOrders[tracking] = { orderId: first.orderId || '', marketplace: first.marketplace };
+        }
+      }
+      if (Object.keys(remarkFromOrders).length > 0) {
+        const ex = JSON.parse(localStorage.getItem('orderRemarkMap') || '{}');
+        localStorage.setItem('orderRemarkMap', JSON.stringify({ ...ex, ...remarkFromOrders }));
+      }
+      if (Object.keys(infoFromOrders).length > 0) {
+        const ex = JSON.parse(localStorage.getItem('orderInfoMap') || '{}');
+        localStorage.setItem('orderInfoMap', JSON.stringify({ ...ex, ...infoFromOrders }));
+      }
+      console.log('[Cache] refresh orders สำเร็จ:', Object.keys(orderRes).length, 'pending');
+    }
+  } catch(e) { console.warn('[Cache] _refreshOrderCacheBackground error:', e.message); }
+  _isRefreshingOrders = false;
+}
   try {
     document.getElementById("app-header").style.display = "none";
     document.getElementById("app-tabs").style.display = "none";
@@ -3825,6 +3879,12 @@ async function _doFinishWork(isManual = false) {
 
 async function processBackgroundUpload(pId, itemsArr, chunks, remarkNote = '', orderId = '', marketplace = '') {
   try {
+    // ✅ ถ้า GAS ยืนยันสำเร็จแล้ว (เช่น อีกเครื่องส่งไปแล้ว) → ข้ามเลย
+    if (_isSent(pId)) {
+      console.log(`[Background] ข้าม ${pId} — sent แล้ว`);
+      return;
+    }
+
     // ดึงออกจาก Local Cache เมื่อแพ็กเสร็จ
     try {
       let localOrders = JSON.parse(localStorage.getItem('localOrdersCache') || '{}');
@@ -3834,20 +3894,27 @@ async function processBackgroundUpload(pId, itemsArr, chunks, remarkNote = '', o
       }
     } catch(e) { console.warn('[Cache] ล้าง localOrdersCache ไม่ได้:', e.message); }
 
+    const videoData = await convertChunksToBase64(chunks);
+
     if (!navigator.onLine) {
-      saveToFailQueue(pId, itemsArr, remarkNote, orderId, marketplace);
+      saveToFailQueue(pId, itemsArr, remarkNote, orderId, marketplace, videoData);
       updateFailQueueBadge();
       return;
     }
 
-    const videoData = await convertChunksToBase64(chunks);
     const res = await callGAS("saveData", { parcelId: pId, items: itemsArr, videoEvidence: videoData || "no_video", remark: remarkNote || "", orderId, marketplace });
     if (!isGasSuccess(res)) throw new Error(res?.error || 'GAS response ไม่สำเร็จ');
+    _markSent(pId);
     console.log(`[Background] บันทึก ${pId} สำเร็จ`);
-    // หมายเหตุ: ไม่ต้อง retryFailedUploads ที่นี่ — interval 60s จัดการเอง เพื่อป้องกัน duplicate
+    // ✅ v2.8: refresh localOrdersCache จาก GAS พื้นหลัง ทันทีหลัง save สำเร็จ
+    // ทำให้เครื่องนี้และเครื่องอื่นที่ refresh ครั้งถัดไปจะไม่เห็น order ที่แพ็กแล้ว
+    _refreshOrderCacheBackground();
   } catch (err) {
     console.error(`[Background Error] ${pId}:`, err);
-    saveToFailQueue(pId, itemsArr, remarkNote, orderId, marketplace);
+    // แปลง chunks → base64 ก่อนเก็บ ถ้ายังไม่ได้ทำ
+    let videoBase64 = '';
+    try { videoBase64 = await convertChunksToBase64(chunks); } catch(e) {}
+    saveToFailQueue(pId, itemsArr, remarkNote, orderId, marketplace, videoBase64);
     updateFailQueueBadge();
   }
 }
