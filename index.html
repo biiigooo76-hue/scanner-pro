@@ -2633,7 +2633,7 @@ document.addEventListener('visibilitychange', () => {
     if (currentP) {
       requestWakeLock();
       if (scanner) { try { scanner.resume(); } catch(e) {} }
-      if (!isRecording) startCameraRecording().catch(() => {});
+      if (!isRecording) startCameraRecording(false).catch(() => {}); // ✅ ต่อ chunks เดิม ไม่ reset
     }
     // กลับมาแล้ว → retry queue ที่อาจ flush ไม่ทัน
     setTimeout(() => retryFailedUploads(), 1000);
@@ -3062,7 +3062,7 @@ function speak(t, priority = true) {
 }
 
 // --- Camera & Video ---
-async function startCameraRecording() {
+async function startCameraRecording(resetChunks = true) {
   if (isRecording) return;
   const videoEl = document.getElementById('video-preview');
   const canvas = document.getElementById('overlayCanvas');
@@ -3078,12 +3078,13 @@ async function startCameraRecording() {
       cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
     }
     videoEl.srcObject = cameraStream;
-    // เราไม่แสดงหน้าจอ videoEl ออกมาแล้ว แต่ให้มันเล่นอยู่เบื้องหลังเงียบๆ เพื่ออัดวิดีโอเข้า Canvas
     await videoEl.play();
     
     canvas.width = videoEl.videoWidth || 640;
     canvas.height = videoEl.videoHeight || 480;
-    recordedChunks = [];
+    // ✅ reset chunks เฉพาะเมื่อ resetChunks=true (พัสดุใบใหม่)
+    // ถ้า resetChunks=false (กลับจาก visibilitychange) → ต่อ chunks เดิม
+    if (resetChunks) recordedChunks = [];
 
     // ✅ cache orderInfoMap เพื่อไม่ต้องอ่าน localStorage ทุก frame
     let cachedOrderInfoMap = {};
@@ -3155,7 +3156,7 @@ async function startCameraRecording() {
     mediaRecorder = new MediaRecorder(canvasStream, { mimeType: 'video/webm;codecs=vp8', videoBitsPerSecond: 2500000 });
     mediaRecorder._stopDraw = () => { drawActive = false; }; // เก็บ ref เพื่อหยุด loop
     mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
-    mediaRecorder.start();
+    mediaRecorder.start(1000); // ✅ timeslice 1000ms — flush chunk ทุก 1 วิ ไม่รอ stop
     isRecording = true;
     document.getElementById('rec-label').innerHTML = '<div class="rec-indicator"><span class="rec-dot"></span> กำลังบันทึกวิดีโอพร้อมข้อมูลกำกับ</div>';
   } catch (err) {
@@ -3768,7 +3769,7 @@ function processNewParcel(text, carrier) {
   } else {
     const parcelMsg = `พัสดุ ${carrier} ใหม่ ลงท้ายด้วย ${lastFour.split('').join(' ')}`;
     _speakParcelThenRemark(parcelMsg, text, 1200);
-    stopCameraRecording().then(() => startCameraRecording()); // หยุดกล้องเก่าก่อนเปิดใหม่เสมอ
+    stopCameraRecording().then(() => startCameraRecording(true)); // ✅ พัสดุใหม่ → reset chunks
     checkExpectedItems(text);
   }
 }
