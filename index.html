@@ -4890,7 +4890,7 @@ async function fetchReport() {
   document.getElementById('dashLoading').style.display = 'block';
   document.getElementById('dashContent').style.display = 'none';
   try {
-    const data = await callGAS("getReportData", { start, end });
+    const data = await callGAS("getReportData", { start, end }, 45000); // ✅ timeout 45s สำหรับ report
     lastReportFetchTime = Date.now();
     lastReportParams = `${start}|${end}`;
     renderReport(data, start, end);
