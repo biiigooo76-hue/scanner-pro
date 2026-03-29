@@ -381,14 +381,7 @@
     }
     .list-group-item:hover { box-shadow: 5px 5px 14px var(--sd), -5px -5px 14px var(--sl); }
 
-    /* ===== ซ่อน Camera Selector ของ Html5QrcodeScanner ===== */
-    #reader__camera_selection,
-    #reader__dashboard_section_csr > span:first-child,
-    #reader select,
-    #reader__filescan_input,
-    #reader__header_message,
-    #reader__status_span { display: none !important; }
-    #reader__dashboard_section_swaplink { display: none !important; }
+    /* ===== Html5Qrcode reader UI cleanup ===== */
     #reader__scan_region { border-radius: 16px; overflow: hidden; }
     #reader__dashboard { padding: 2px 0 0 !important; background: transparent !important; border: none !important; }
     #reader__dashboard_section_csr { text-align: center; }
@@ -403,7 +396,10 @@
       box-shadow: none !important;
       margin-top: 3px !important;
     }
-    /* ซ่อน select camera dropdown ทั้งหมด */
+    /* ซ่อน UI ที่ไม่ใช้ของ Html5Qrcode */
+    #reader__camera_selection, #reader__filescan_input,
+    #reader__header_message, #reader__status_span,
+    #reader__dashboard_section_swaplink,
     #reader__dashboard_section_csr select { display: none !important; }
 
     /* ===== SKELETON LOADER ===== */
@@ -2096,6 +2092,16 @@
         เริ่มระบบสแกน
       </button>
       
+      <!-- Custom Camera Selector -->
+      <div id="cameraSelectorWrap" style="display:none; margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.6); border-radius:16px; padding:6px 12px; box-shadow:2px 2px 8px var(--sd),-2px -2px 8px var(--sl);">
+          <span style="font-size:0.75rem; color:var(--text3); white-space:nowrap;">📷 กล้อง</span>
+          <select id="cameraSelect" onchange="switchCamera(this.value)" style="flex:1; font-family:'Mitr',sans-serif; font-size:0.75rem; background:transparent; border:none; color:var(--text); outline:none; cursor:pointer;">
+            <option value="">กำลังโหลด...</option>
+          </select>
+        </div>
+      </div>
+
       <div id="reader" style="display:none" class="scanner-wrap">
         <div class="scanner-viewfinder">
           <span class="scanner-viewfinder-label">วาง barcode ในกรอบ</span>
@@ -2639,7 +2645,7 @@ window.addEventListener('pagehide', (e) => {
   // ✅ ถ้า finishWork กำลัง process อยู่ → ปล่อยให้มันจัดการกล้องเอง
   if (!isFinishing) {
     if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-    if (scanner) { try { scanner.clear(); } catch(e) {} }
+    if (scanner) { try { if (scanner.isScanning) scanner.stop(); } catch(e) {} }
   }
   _flushWithBeacon();
 });
@@ -3328,12 +3334,79 @@ async function refreshAllCache() {
   }
 }
 
-function startScan() {
+let currentCameraId = null;
+
+async function startScan() {
   document.getElementById("reader").style.display = "block";
-  if (!scanner) {
-    scanner = new Html5QrcodeScanner("reader", { fps: 20, qrbox: { width: 300, height: 350 }, rememberLastUsedCamera: true });
-    scanner.render((text, result) => onScanBuffer(text, result));
+  document.getElementById("cameraSelectorWrap").style.display = "block";
+
+  // โหลดรายการกล้อง
+  let cameras = [];
+  try {
+    cameras = await Html5Qrcode.getCameras();
+  } catch(e) {
+    console.warn('[Camera] getCameras error:', e);
   }
+
+  const sel = document.getElementById("cameraSelect");
+  if (cameras && cameras.length > 0) {
+    sel.innerHTML = cameras.map(c => `<option value="${c.id}">${c.label || 'Camera ' + c.id}</option>`).join('');
+    // เลือกกล้องหลัง (environment) หรือกล้องสุดท้าย หรือที่เคยเลือกไว้
+    const savedId = localStorage.getItem('selectedCameraId');
+    let preferredId = savedId && cameras.find(c => c.id === savedId) ? savedId : null;
+    if (!preferredId) {
+      // หา back camera จาก label
+      const backCam = cameras.find(c => /back|rear|environment|หลัง/i.test(c.label));
+      preferredId = backCam ? backCam.id : cameras[cameras.length - 1].id;
+    }
+    sel.value = preferredId;
+    currentCameraId = preferredId;
+  } else {
+    sel.innerHTML = '<option value="">ไม่พบกล้อง</option>';
+  }
+
+  if (!scanner) {
+    scanner = new Html5Qrcode("reader");
+  }
+
+  if (currentCameraId) {
+    await _startHtml5Qrcode(currentCameraId);
+  }
+}
+
+async function _startHtml5Qrcode(cameraId) {
+  if (!scanner) return;
+  try {
+    if (scanner.isScanning) await scanner.stop();
+  } catch(e) {}
+  try {
+    await scanner.start(
+      cameraId,
+      { fps: 20, qrbox: { width: 300, height: 350 } },
+      (text, result) => onScanBuffer(text, result),
+      () => {}
+    );
+    currentCameraId = cameraId;
+    localStorage.setItem('selectedCameraId', cameraId);
+  } catch(e) {
+    console.error('[Camera] start error:', e);
+    // fallback: environment
+    try {
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 20, qrbox: { width: 300, height: 350 } },
+        (text, result) => onScanBuffer(text, result),
+        () => {}
+      );
+    } catch(e2) {
+      console.error('[Camera] fallback error:', e2);
+    }
+  }
+}
+
+async function switchCamera(cameraId) {
+  if (!cameraId || cameraId === currentCameraId) return;
+  if (scanner) await _startHtml5Qrcode(cameraId);
 }
 
 function onScanBuffer(text, result) {
@@ -3798,7 +3871,12 @@ async function resetAppForNext() {
 }
 
 async function closeAppCompletely() {
-  if (scanner) { await scanner.clear(); scanner = null; }
+  if (scanner) {
+    try { if (scanner.isScanning) await scanner.stop(); } catch(e) { console.warn('[closeApp] scanner.stop error:', e); }
+    scanner = null;
+  }
+  currentCameraId = null;
+  document.getElementById("cameraSelectorWrap").style.display = "none";
   releaseWakeLock();
   const pawBg = document.getElementById('pawBg');
   if (pawBg) pawBg.style.display = '';
