@@ -4486,10 +4486,16 @@ async function processFileUpload() {
         const qty      = parseInt(row[useMap.qty]) || 1;
         if (!tracking || !sku || tracking === 'UNDEFINED' || sku === 'UNDEFINED') continue;
         if (tracking.length < 5 || tracking.includes(' ')) continue;
-        // ✅ ดึง orderId
-        if (!orderInfoMap[tracking] && useMap.orderId !== undefined) {
+        // ✅ ดึง orderId — รองรับ "การจัดส่งแบบรวม" (tracking เดียว หลาย orderId)
+        if (useMap.orderId !== undefined) {
           const oid = String(row[useMap.orderId] || '').trim();
-          if (oid) orderInfoMap[tracking] = { orderId: oid, marketplace };
+          if (oid) {
+            if (!orderInfoMap[tracking]) {
+              orderInfoMap[tracking] = { orderId: oid, marketplace };
+            } else if (!orderInfoMap[tracking].orderId.split(',').map(s=>s.trim()).includes(oid)) {
+              orderInfoMap[tracking].orderId += ',' + oid; // เก็บทุก orderId คั่น ,
+            }
+          }
         }
         // ดึง remark (รวมหลาย column: Buyer Message | Seller Note)
         if (!remarkMap[tracking] && useMap.remark !== undefined) {
